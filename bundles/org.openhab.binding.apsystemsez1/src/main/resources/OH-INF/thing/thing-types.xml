@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<thing:thing-descriptions bindingId="apsystemsez1"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:thing="https://openhab.org/schemas/thing-description/v1.0.0"
+	xsi:schemaLocation="https://openhab.org/schemas/thing-description/v1.0.0 https://openhab.org/schemas/thing-description-1.0.0.xsd">
+
+	<thing-type id="ez1-inverter">
+
+		<label>APsystems EZ1 Inverter</label>
+		<description>EZ1 Inverter with local API activated</description>
+
+
+		<channel-groups>
+			<channel-group id="device" typeId="cg-device"/>
+			<channel-group id="dc1" typeId="cg-dc">
+				<label>DC 1</label>
+				<description>DC</description>
+			</channel-group>
+			<channel-group id="dc2" typeId="cg-dc">
+				<label>DC 2</label>
+				<description>DC</description>
+			</channel-group>
+		</channel-groups>
+
+
+		<config-description>
+			<parameter name="hostname" type="text" required="true">
+				<context>network-address</context>
+				<label>Hostname</label>
+				<description>Hostname or IP address of the device</description>
+			</parameter>
+			<parameter name="port" type="integer" required="true">
+				<context>port-send</context>
+				<label>Port</label>
+				<description>Port</description>
+				<default>8050</default>
+				<advanced>true</advanced>
+			</parameter>
+			<parameter name="refreshInterval" type="integer" unit="s" min="1">
+				<label>Refresh Interval</label>
+				<description>Interval the device is polled in sec.</description>
+				<default>10</default>
+				<advanced>true</advanced>
+			</parameter>
+		</config-description>
+	</thing-type>
+
+	<channel-group-type id="cg-dc">
+		<label>DC</label>
+		<description>DC</description>
+		<channels>
+			<channel id="power" typeId="power"/>
+			<channel id="energy-start" typeId="energy-start"/>
+			<channel id="energy-lifetime" typeId="energy-lifetime"/>
+			<channel id="alarm-isce" typeId="alarm-isce"/>
+		</channels>
+	</channel-group-type>
+
+	<channel-group-type id="cg-device">
+		<label>Device</label>
+		<description>Device</description>
+		<channels>
+			<channel id="state" typeId="state"/>
+			<channel id="max-power" typeId="max-power"/>
+			<channel id="alarm-og" typeId="alarm-og"/>
+			<channel id="alarm-oe" typeId="alarm-oe"/>
+		</channels>
+	</channel-group-type>
+
+	<channel-type id="device">
+		<item-type>Number:Power</item-type>
+		<label>Power</label>
+		<description>Current Power Output.</description>
+		<category>Energy</category>
+		<state readOnly="true" pattern="%.1f %unit%"/>
+	</channel-type>
+
+	<channel-type id="power">
+		<item-type>Number:Power</item-type>
+		<label>Power</label>
+		<description>Current power</description>
+		<category>Energy</category>
+		<state readOnly="true" pattern="%.1f %unit%"/>
+	</channel-type>
+
+	<channel-type id="energy-start">
+		<item-type>Number:Energy</item-type>
+		<label>Energy since startup</label>
+		<description>Energy produced since startup. Reset on reboot of the device.</description>
+		<category>Energy</category>
+		<state readOnly="true" pattern="%.2f %unit%"/>
+	</channel-type>
+
+	<channel-type id="energy-lifetime">
+		<item-type>Number:Energy</item-type>
+		<label>Energy Lifetime</label>
+		<description>Overall energy production of the device.</description>
+		<category>Energy</category>
+		<state readOnly="true" pattern="%.2f %unit%"/>
+	</channel-type>
+
+	<channel-type id="alarm-isce">
+		<item-type>Switch</item-type>
+		<label>DC Short Circuit Error</label>
+		<description>Check whether DC connection is properly connected, especially that using extension line or swap with the
+			normal channel to confirm the working status.</description>
+		<category>Alarm</category>
+		<state readOnly="true">
+			<options>
+				<option value="ON">Alarm</option>
+				<option value="OFF">OK</option>
+			</options>
+		</state>
+	</channel-type>
+
+	<channel-type id="state">
+		<item-type>Switch</item-type>
+		<label>Output power state</label>
+		<description></description>
+		<category>Switch</category>
+	</channel-type>
+
+	<channel-type id="max-power">
+		<item-type>Number:Power</item-type>
+		<label>Maximum output power</label>
+		<description>Maximum power the deivce is allowed to output.</description>
+		<category>Energy</category>
+		<state min="0" step="1" pattern="%d %unit%"/>
+	</channel-type>
+
+	<channel-type id="alarm-og">
+		<item-type>Switch</item-type>
+		<label>Alarm offgrid</label>
+		<description>Check whether the AC connection of the inverter is normal.</description>
+		<category>Alarm</category>
+		<state readOnly="true">
+			<options>
+				<option value="ON">Alarm</option>
+				<option value="OFF">OK</option>
+			</options>
+		</state>
+	</channel-type>
+
+	<channel-type id="alarm-oe">
+		<item-type>Switch</item-type>
+		<label>Output fault</label>
+		<description>Check whether the AC connection is normal.</description>
+		<category>Alarm</category>
+		<state readOnly="true">
+			<options>
+				<option value="ON">Alarm</option>
+				<option value="OFF">OK</option>
+			</options>
+		</state>
+	</channel-type>
+
+
+</thing:thing-descriptions>
