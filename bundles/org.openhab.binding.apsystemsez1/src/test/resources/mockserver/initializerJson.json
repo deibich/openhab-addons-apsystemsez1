@@ -1,0 +1,141 @@
+[
+  {
+    "httpRequest": {
+      "path": "/getDeviceInfo",
+      "method": "GET"
+    },
+    "httpResponse": {
+      "body": {
+        "type": "JSON",
+        "json": {
+            "data": {
+                "deviceId": "E07000000001",
+                "devVer": "EZ1 1.0.0",
+                "ssid": "WIFI-SSID",
+                "ipAddr": "10.0.0.3",
+                "minPower": "30",
+                "maxPower": "799"
+            },
+            "message": "SUCCESS",
+            "deviceId": "E07000000001"
+        }
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "path": "/getOutputData",
+      "method": "GET"
+    },
+    "httpResponse": {
+      "body": {
+        "type": "JSON",
+        "json": {
+            "data": {
+                "p1": 10,
+                "e1": 110,
+                "t1": 0,
+                "p2": 0,
+                "e2": 0,
+                "t2": 0,
+            },
+            "message": "SUCCESS",
+            "deviceId": "E07000000001"
+        }
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "path": "/getMaxPower",
+      "method": "GET"
+    },
+    "httpResponse": {
+      "body": {
+        "type": "JSON",
+        "json": {
+            "data": {
+                "maxPower": "600"
+            },
+            "message": "SUCCESS",
+            "deviceId": "E07000000001"
+        }
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "path": "/getAlarm",
+      "method": "GET"
+    },
+    "httpResponse": {
+      "body": {
+        "type": "JSON",
+        "json": {
+            "data": {
+                "og": "0",
+                "isce1": "0",
+                "isce2": "0",
+                "oe": "0"
+            },
+            "message": "SUCCESS",
+            "deviceId": "E07000000001"
+        }
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "path": "/getOnOff",
+      "method": "GET"
+    },
+    "httpResponse": {
+      "body": {
+        "type": "JSON",
+        "json": {
+            "data": {
+                "state": "0"
+            },
+            "message": "SUCCESS",
+            "deviceId": "E07000000001"
+        }
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "path": "/setOnOff",
+      "method": "GET",
+    },
+    "httpResponse": {
+      "body": {
+        "type": "JSON",
+        "json": {
+            "data": {
+                "state": "0"
+            },
+            "message": "SUCCESS",
+            "deviceId": "E07000000001"
+        }
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "path": "/setMaxPower",
+      "method": "GET",
+    },
+    "httpResponse": {
+      "body": {
+        "type": "JSON",
+        "json": {
+            "data": {
+                "maxPower": "400"
+            },
+            "message": "SUCCESS",
+            "deviceId": "E07000000001"
+        }
+      }
+    }
+  }
+]

@@ -1,0 +1,11 @@
+version: "2.4"
+services:
+  mockServer:
+    image: mockserver/mockserver:latest
+    ports:
+      - 8050:1080
+    environment:
+      MOCKSERVER_INITIALIZATION_JSON_PATH: /config/initializerJson.json
+      MOCKSERVER_WATCH_INITIALIZATION_JSON: True
+    volumes:
+      - ./initializerJson.json:/config/initializerJson.json
