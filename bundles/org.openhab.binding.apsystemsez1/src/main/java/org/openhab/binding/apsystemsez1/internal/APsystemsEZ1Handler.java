@@ -199,6 +199,13 @@ public class APsystemsEZ1Handler extends BaseThingHandler {
                         new QuantityType<Energy>(responseData.data.e2, Units.KILOWATT_HOUR));
                 updateState(new ChannelUID(dc2ChannelGroupUID, APsystemsEZ1BindingConstants.CHANNEL_ENERGY_LIFETIME),
                         new QuantityType<Energy>(responseData.data.te2, Units.KILOWATT_HOUR));
+
+                updateState(new ChannelUID(deviceChannelGroupUID, APsystemsEZ1BindingConstants.CHANNEL_POWER),
+                        new QuantityType<Power>(responseData.data.p1 + responseData.data.p2, Units.WATT));
+                updateState(new ChannelUID(deviceChannelGroupUID, APsystemsEZ1BindingConstants.CHANNEL_ENERGY_START),
+                        new QuantityType<Energy>(responseData.data.e1 + responseData.data.e2, Units.KILOWATT_HOUR));
+                updateState(new ChannelUID(deviceChannelGroupUID, APsystemsEZ1BindingConstants.CHANNEL_ENERGY_LIFETIME),
+                        new QuantityType<Energy>(responseData.data.te1 + responseData.data.te2, Units.KILOWATT_HOUR));
             }
         }
 
@@ -263,7 +270,6 @@ public class APsystemsEZ1Handler extends BaseThingHandler {
                 .timeout(2, TimeUnit.SECONDS);
         var response = sendRequest(request);
         if (response == null) {
-            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, "@text/error.invalid.data");
             return null;
         }
         return parseResponse(type, response);
