@@ -9,19 +9,26 @@
 		<label>APsystems EZ1 Inverter</label>
 		<description>EZ1 Inverter with local API activated</description>
 
-
 		<channel-groups>
 			<channel-group id="device" typeId="cg-device"/>
 			<channel-group id="dc1" typeId="cg-dc">
 				<label>DC 1</label>
-				<description>DC</description>
+				<description>DC 1</description>
 			</channel-group>
 			<channel-group id="dc2" typeId="cg-dc">
 				<label>DC 2</label>
-				<description>DC</description>
+				<description>DC 2</description>
 			</channel-group>
 		</channel-groups>
 
+		<properties>
+			<property name="deviceId"></property>
+			<property name="deviceVersion"></property>
+			<property name="ssid"></property>
+			<property name="ipAddress"></property>
+			<property name="minPower"></property>
+			<property name="maxPower"></property>
+		</properties>
 
 		<config-description>
 			<parameter name="hostname" type="text" required="true">
@@ -61,19 +68,14 @@
 		<description>Device</description>
 		<channels>
 			<channel id="state" typeId="state"/>
+			<channel id="power" typeId="power"/>
+			<channel id="energy-start" typeId="energy-start"/>
+			<channel id="energy-lifetime" typeId="energy-lifetime"/>
 			<channel id="max-power" typeId="max-power"/>
 			<channel id="alarm-og" typeId="alarm-og"/>
 			<channel id="alarm-oe" typeId="alarm-oe"/>
 		</channels>
 	</channel-group-type>
-
-	<channel-type id="device">
-		<item-type>Number:Power</item-type>
-		<label>Power</label>
-		<description>Current Power Output.</description>
-		<category>Energy</category>
-		<state readOnly="true" pattern="%.1f %unit%"/>
-	</channel-type>
 
 	<channel-type id="power">
 		<item-type>Number:Power</item-type>
@@ -116,7 +118,7 @@
 	<channel-type id="state">
 		<item-type>Switch</item-type>
 		<label>Output power state</label>
-		<description></description>
+		<description>When set off, the device will stop outputting power to the grid</description>
 		<category>Switch</category>
 	</channel-type>
 
