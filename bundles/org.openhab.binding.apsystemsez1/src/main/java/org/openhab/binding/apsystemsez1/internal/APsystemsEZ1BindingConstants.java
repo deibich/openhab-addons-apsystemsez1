@@ -64,8 +64,8 @@ public class APsystemsEZ1BindingConstants {
     // List of all properties
     public static final String PROPERTY_DEVICE_ID = "deviceId";
     public static final String PROPERTY_DEVICE_VERSION = "deviceVersion";
-    public static final String PROPERTY_SSID = "SSID";
-    public static final String PROPERTY_IP_ADDRESS = "IpAddress";
+    public static final String PROPERTY_SSID = "ssid";
+    public static final String PROPERTY_IP_ADDRESS = "ipAddress";
     public static final String PROPERTY_MIN_POWER = "minPower";
     public static final String PROPERTY_MAX_POWER = "maxPower";
 
