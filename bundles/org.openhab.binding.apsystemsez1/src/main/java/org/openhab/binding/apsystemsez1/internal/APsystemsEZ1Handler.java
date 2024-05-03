@@ -116,7 +116,6 @@ public class APsystemsEZ1Handler extends BaseThingHandler {
                     if (response == null) {
                         return;
                     }
-                    logger.info("parse");
                     var data = parseResponse(EZ1OnOffResponseData.class, response);
                     if (data == null || data.data == null) {
                         return;
@@ -167,6 +166,8 @@ public class APsystemsEZ1Handler extends BaseThingHandler {
                         Map.entry(APsystemsEZ1BindingConstants.PROPERTY_MIN_POWER, responseData.data.minPower),
                         Map.entry(APsystemsEZ1BindingConstants.PROPERTY_MAX_POWER, responseData.data.maxPower),
                         Map.entry(APsystemsEZ1BindingConstants.PROPERTY_SSID, responseData.data.ssid)));
+            } else {
+                return;
             }
         }
 
@@ -206,6 +207,8 @@ public class APsystemsEZ1Handler extends BaseThingHandler {
                         new QuantityType<Energy>(responseData.data.e1 + responseData.data.e2, Units.KILOWATT_HOUR));
                 updateState(new ChannelUID(deviceChannelGroupUID, APsystemsEZ1BindingConstants.CHANNEL_ENERGY_LIFETIME),
                         new QuantityType<Energy>(responseData.data.te1 + responseData.data.te2, Units.KILOWATT_HOUR));
+            } else {
+                return;
             }
         }
 
@@ -219,6 +222,8 @@ public class APsystemsEZ1Handler extends BaseThingHandler {
                 updateStatus(ThingStatus.ONLINE);
                 updateState(new ChannelUID(deviceChannelGroupUID, APsystemsEZ1BindingConstants.CHANNEL_MAX_PWR),
                         new QuantityType<Power>(responseData.data.maxPower, Units.WATT));
+            } else {
+                return;
             }
         }
 
@@ -240,6 +245,8 @@ public class APsystemsEZ1Handler extends BaseThingHandler {
                         OnOffType.from(responseData.data.isce1));
                 updateState(new ChannelUID(dc2ChannelGroupUID, APsystemsEZ1BindingConstants.CHANNEL_ALARM_ISCE),
                         OnOffType.from(responseData.data.isce2));
+            } else {
+                return;
             }
         }
 
@@ -254,6 +261,8 @@ public class APsystemsEZ1Handler extends BaseThingHandler {
                 // 0 -> On, 1 -> Off
                 updateState(new ChannelUID(deviceChannelGroupUID, APsystemsEZ1BindingConstants.CHANNEL_STATE),
                         responseData.data.state.equalsIgnoreCase("0") ? OnOffType.ON : OnOffType.OFF);
+            } else {
+                return;
             }
         }
     }
@@ -267,7 +276,7 @@ public class APsystemsEZ1Handler extends BaseThingHandler {
         }
 
         Request request = httpClient.newRequest(config.hostname, config.port).path(endpoint).method(HttpMethod.GET)
-                .timeout(2, TimeUnit.SECONDS);
+                .timeout(1, TimeUnit.SECONDS);
         var response = sendRequest(request);
         if (response == null) {
             return null;
@@ -297,13 +306,17 @@ public class APsystemsEZ1Handler extends BaseThingHandler {
             }
 
         } catch (JsonSyntaxException e) {
-            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, "@text/error.json");
+            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, "@text/error.communication.json");
         } catch (InterruptedException e) {
-            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, "@text/error.interrupted");
+            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
+                    "@text/error.communication.interrupted");
+            return null;
         } catch (ExecutionException e) {
-            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, "@text/error.execution");
+            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
+                    "@text/error.communication.execution");
         } catch (TimeoutException e) {
-            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, "@text/error.timeout");
+            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
+                    "@text/error.communication.timeout");
         }
         return null;
     }
