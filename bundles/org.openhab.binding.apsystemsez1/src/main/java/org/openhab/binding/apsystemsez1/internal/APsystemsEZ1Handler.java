@@ -238,7 +238,7 @@ public class APsystemsEZ1Handler extends BaseThingHandler {
 
                 updateState(new ChannelUID(deviceChannelGroupUID, APsystemsEZ1BindingConstants.CHANNEL_ALARM_OE),
                         OnOffType.from(responseData.data.oe));
-                updateState(new ChannelUID(deviceChannelGroupUID, APsystemsEZ1BindingConstants.CHANNEL_ALARM_OE),
+                updateState(new ChannelUID(deviceChannelGroupUID, APsystemsEZ1BindingConstants.CHANNEL_ALARM_OG),
                         OnOffType.from(responseData.data.og));
 
                 updateState(new ChannelUID(dc1ChannelGroupUID, APsystemsEZ1BindingConstants.CHANNEL_ALARM_ISCE),
