@@ -276,7 +276,7 @@ public class APsystemsEZ1Handler extends BaseThingHandler {
         }
 
         Request request = httpClient.newRequest(config.hostname, config.port).path(endpoint).method(HttpMethod.GET)
-                .timeout(1, TimeUnit.SECONDS);
+                .timeout(2, TimeUnit.SECONDS);
         var response = sendRequest(request);
         if (response == null) {
             return null;
