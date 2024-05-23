@@ -19,10 +19,21 @@ package org.openhab.binding.apsystemsez1.internal.dto;
 public class EZ1AlarmResponseData extends EZ1ResponseData {
     public Data data;
 
+    @Override
+    public String toString() {
+        return "EZ1AlarmResponseData [message=" + message + ", deviceId=" + deviceId + ", data=" + data.toString()
+                + "]";
+    }
+
     public static class Data {
         public String og;
         public String isce1;
         public String isce2;
         public String oe;
+
+        @Override
+        public String toString() {
+            return "Data [og=" + og + ", isce1=" + isce1 + ", isce2=" + isce2 + ", oe=" + oe + "]";
+        }
     }
 }
