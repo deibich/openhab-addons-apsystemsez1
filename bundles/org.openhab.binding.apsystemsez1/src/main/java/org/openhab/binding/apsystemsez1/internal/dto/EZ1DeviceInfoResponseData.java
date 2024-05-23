@@ -20,6 +20,12 @@ public class EZ1DeviceInfoResponseData extends EZ1ResponseData {
 
     public Data data;
 
+    @Override
+    public String toString() {
+        return "EZ1DeviceInfoResponseData [message=" + message + ", deviceId=" + deviceId + ", data=" + data.toString()
+                + "]";
+    }
+
     public static class Data {
         public String deviceId;
         public String devVer;
@@ -27,5 +33,11 @@ public class EZ1DeviceInfoResponseData extends EZ1ResponseData {
         public String ipAddr;
         public String minPower;
         public String maxPower;
+
+        @Override
+        public String toString() {
+            return "Data [deviceId=" + deviceId + ", devVer=" + devVer + ", ssid=" + ssid + ", ipAddr=" + ipAddr
+                    + ", minPower=" + minPower + ", maxPower=" + maxPower + "]";
+        }
     }
 }
