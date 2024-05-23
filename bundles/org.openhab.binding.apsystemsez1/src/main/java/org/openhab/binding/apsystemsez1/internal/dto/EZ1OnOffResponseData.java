@@ -21,8 +21,20 @@ import org.eclipse.jdt.annotation.NonNull;
 public class EZ1OnOffResponseData extends EZ1ResponseData {
     public Data data;
 
+    @Override
+    public String toString() {
+        return "EZ1OnOffResponseData [message=" + message + ", deviceId=" + deviceId + ", data=" + data.toString()
+                + "]";
+    }
+
     public static class Data {
+
         @NonNull
-        public String state = "";
+        public String status = "";
+
+        @Override
+        public String toString() {
+            return "Data [status=" + status + "]";
+        }
     }
 }

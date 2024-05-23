@@ -67,7 +67,7 @@
 		<label>Device</label>
 		<description>Device</description>
 		<channels>
-			<channel id="state" typeId="state"/>
+			<channel id="status" typeId="status"/>
 			<channel id="power" typeId="power"/>
 			<channel id="energy-start" typeId="energy-start"/>
 			<channel id="energy-lifetime" typeId="energy-lifetime"/>
@@ -115,9 +115,9 @@
 		</state>
 	</channel-type>
 
-	<channel-type id="state">
+	<channel-type id="status">
 		<item-type>Switch</item-type>
-		<label>Output power state</label>
+		<label>Output power status</label>
 		<description>When set off, the device will stop outputting power to the grid</description>
 		<category>Switch</category>
 	</channel-type>
@@ -125,7 +125,7 @@
 	<channel-type id="max-power">
 		<item-type>Number:Power</item-type>
 		<label>Maximum output power</label>
-		<description>Maximum power the deivce is allowed to output.</description>
+		<description>Maximum power the device is allowed to output.</description>
 		<category>Energy</category>
 		<state min="0" step="1" pattern="%d %unit%"/>
 	</channel-type>

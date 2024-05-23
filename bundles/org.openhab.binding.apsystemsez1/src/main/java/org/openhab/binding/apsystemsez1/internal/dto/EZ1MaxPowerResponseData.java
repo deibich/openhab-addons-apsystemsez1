@@ -20,7 +20,18 @@ public class EZ1MaxPowerResponseData extends EZ1ResponseData {
 
     public Data data;
 
+    @Override
+    public String toString() {
+        return "EZ1MaxPowerResponseData [message=" + message + ", deviceId=" + deviceId + ", data=" + data.toString()
+                + "]";
+    }
+
     public static class Data {
         public int maxPower;
+
+        @Override
+        public String toString() {
+            return "Data [maxPower=" + maxPower + "]";
+        }
     }
 }

@@ -17,7 +17,14 @@ package org.openhab.binding.apsystemsez1.internal.dto;
  *
  */
 public class EZ1OutputDataResponseData extends EZ1ResponseData {
+
     public Data data;
+
+    @Override
+    public String toString() {
+        return "EZ1OutputDataResponseData [message=" + message + ", deviceId=" + deviceId + ", data=" + data.toString()
+                + "]";
+    }
 
     public static class Data {
         public float p1;
@@ -26,5 +33,11 @@ public class EZ1OutputDataResponseData extends EZ1ResponseData {
         public float p2;
         public float e2;
         public float te2;
+
+        @Override
+        public String toString() {
+            return "Data [p1=" + p1 + ", e1=" + e1 + ", te1=" + te1 + ", p2=" + p2 + ", e2=" + e2 + ", te2=" + te2
+                    + "]";
+        }
     }
 }

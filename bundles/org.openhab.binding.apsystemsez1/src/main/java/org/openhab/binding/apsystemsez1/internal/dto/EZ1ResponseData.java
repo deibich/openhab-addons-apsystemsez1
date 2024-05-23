@@ -19,4 +19,9 @@ package org.openhab.binding.apsystemsez1.internal.dto;
 public abstract class EZ1ResponseData {
     public String message;
     public String deviceId;
+
+    @Override
+    public String toString() {
+        return "EZ1ResponseData [message=" + message + ", deviceId=" + deviceId + "]";
+    }
 }

@@ -78,7 +78,7 @@ public class APsystemsEZ1Handler extends BaseThingHandler {
 
     @Override
     public void handleCommand(ChannelUID channelUID, Command command) {
-        // Allowed commands are setMaxPower and setOnOff state
+        // Allowed commands are setMaxPower and setOnOff status
         if (command instanceof RefreshType) {
             // TODO: update channels with cached values.
             return;
@@ -107,7 +107,7 @@ public class APsystemsEZ1Handler extends BaseThingHandler {
                 }
 
                 break;
-            case APsystemsEZ1BindingConstants.CHANNEL_STATE:
+            case APsystemsEZ1BindingConstants.CHANNEL_STATUS:
                 if (command instanceof OnOffType) {
                     var request = httpClient.newRequest(config.hostname, config.port)
                             .path(APsystemsEZ1BindingConstants.API_ENDPOINT_SET_ON_OFF).method(HttpMethod.GET)
@@ -120,7 +120,7 @@ public class APsystemsEZ1Handler extends BaseThingHandler {
                     if (data == null || data.data == null) {
                         return;
                     }
-                    updateState(channelUID, data.data.state.equalsIgnoreCase("0") ? OnOffType.ON : OnOffType.OFF);
+                    updateState(channelUID, data.data.status.equalsIgnoreCase("0") ? OnOffType.ON : OnOffType.OFF);
                 }
                 break;
         }
@@ -259,8 +259,8 @@ public class APsystemsEZ1Handler extends BaseThingHandler {
                 }
                 updateStatus(ThingStatus.ONLINE);
                 // 0 -> On, 1 -> Off
-                updateState(new ChannelUID(deviceChannelGroupUID, APsystemsEZ1BindingConstants.CHANNEL_STATE),
-                        responseData.data.state.equalsIgnoreCase("0") ? OnOffType.ON : OnOffType.OFF);
+                updateState(new ChannelUID(deviceChannelGroupUID, APsystemsEZ1BindingConstants.CHANNEL_STATUS),
+                        responseData.data.status.equalsIgnoreCase("0") ? OnOffType.ON : OnOffType.OFF);
             } else {
                 return;
             }
@@ -281,7 +281,11 @@ public class APsystemsEZ1Handler extends BaseThingHandler {
         if (response == null) {
             return null;
         }
-        return parseResponse(type, response);
+        var parsedRespone = parseResponse(type, response);
+
+        logger.debug("Response from endpoint {}: {}", endpoint, parsedRespone);
+
+        return parsedRespone;
     }
 
     @Nullable
