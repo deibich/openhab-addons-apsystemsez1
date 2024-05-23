@@ -49,8 +49,8 @@ public class APsystemsEZ1BindingConstants {
     // Energy Lifetime - kWh - float
     public static final String CHANNEL_ENERGY_LIFETIME = "energy-lifetime";
 
-    // Output Power State
-    public static final String CHANNEL_STATE = "state";
+    // Output Power Status
+    public static final String CHANNEL_STATUS = "status";
     // Max Power Output - W
     public static final String CHANNEL_MAX_PWR = "max-power";
 
