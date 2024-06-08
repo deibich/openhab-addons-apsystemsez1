@@ -71,9 +71,19 @@ public class APsystemsEZ1Handler extends BaseThingHandler {
 
     private volatile boolean stopPolling = false;
 
+    private ChannelGroupUID deviceChannelGroupUID;
+    private ChannelGroupUID dc1ChannelGroupUID;
+    private ChannelGroupUID dc2ChannelGroupUID;
+
     public APsystemsEZ1Handler(Thing thing, HttpClient httpClient) {
         super(thing);
         this.httpClient = httpClient;
+        this.deviceChannelGroupUID = new ChannelGroupUID(getThing().getUID(),
+                APsystemsEZ1BindingConstants.CHANNEL_GROUP_DEVICE);
+        this.dc1ChannelGroupUID = new ChannelGroupUID(getThing().getUID(),
+                APsystemsEZ1BindingConstants.CHANNEL_GROUP_DC1);
+        this.dc2ChannelGroupUID = new ChannelGroupUID(getThing().getUID(),
+                APsystemsEZ1BindingConstants.CHANNEL_GROUP_DC2);
     }
 
     @Override
@@ -154,131 +164,90 @@ public class APsystemsEZ1Handler extends BaseThingHandler {
         // getDeviceInfo
         if (getThing().getStatus() != ThingStatus.ONLINE) {
             var responseData = pollEndpointFor(EZ1DeviceInfoResponseData.class);
-            if (responseData != null) {
-                if (stopPolling) {
-                    return;
-                }
-                updateStatus(ThingStatus.ONLINE);
-                getThing().setProperties(Map.ofEntries(
-                        Map.entry(APsystemsEZ1BindingConstants.PROPERTY_DEVICE_ID, responseData.data.deviceId),
-                        Map.entry(APsystemsEZ1BindingConstants.PROPERTY_DEVICE_VERSION, responseData.data.devVer),
-                        Map.entry(APsystemsEZ1BindingConstants.PROPERTY_IP_ADDRESS, responseData.data.ipAddr),
-                        Map.entry(APsystemsEZ1BindingConstants.PROPERTY_MIN_POWER, responseData.data.minPower),
-                        Map.entry(APsystemsEZ1BindingConstants.PROPERTY_MAX_POWER, responseData.data.maxPower),
-                        Map.entry(APsystemsEZ1BindingConstants.PROPERTY_SSID, responseData.data.ssid)));
-            } else {
+            if (responseData == null || stopPolling) {
                 return;
             }
+            if (isResponseValid(responseData)) {
+                updateStatus(ThingStatus.ONLINE);
+                updateChannelStatesFor(responseData);
+            } else {
+                logger.warn("Inverter response from endpoint {} was not valid.", EZ1DeviceInfoResponseData.class);
+            }
         }
-
-        var deviceChannelGroupUID = new ChannelGroupUID(getThing().getUID(),
-                APsystemsEZ1BindingConstants.CHANNEL_GROUP_DEVICE);
-        var dc1ChannelGroupUID = new ChannelGroupUID(getThing().getUID(),
-                APsystemsEZ1BindingConstants.CHANNEL_GROUP_DC1);
-        var dc2ChannelGroupUID = new ChannelGroupUID(getThing().getUID(),
-                APsystemsEZ1BindingConstants.CHANNEL_GROUP_DC2);
 
         // getOutputData
         {
             var responseData = pollEndpointFor(EZ1OutputDataResponseData.class);
-            if (responseData != null) {
-                if (stopPolling) {
-                    return;
-                }
-                updateStatus(ThingStatus.ONLINE);
-
-                updateState(new ChannelUID(dc1ChannelGroupUID, APsystemsEZ1BindingConstants.CHANNEL_POWER),
-                        new QuantityType<Power>(responseData.data.p1, Units.WATT));
-                updateState(new ChannelUID(dc1ChannelGroupUID, APsystemsEZ1BindingConstants.CHANNEL_ENERGY_START),
-                        new QuantityType<Energy>(responseData.data.e1, Units.KILOWATT_HOUR));
-                updateState(new ChannelUID(dc1ChannelGroupUID, APsystemsEZ1BindingConstants.CHANNEL_ENERGY_LIFETIME),
-                        new QuantityType<Energy>(responseData.data.te1, Units.KILOWATT_HOUR));
-
-                updateState(new ChannelUID(dc2ChannelGroupUID, APsystemsEZ1BindingConstants.CHANNEL_POWER),
-                        new QuantityType<Power>(responseData.data.p2, Units.WATT));
-                updateState(new ChannelUID(dc2ChannelGroupUID, APsystemsEZ1BindingConstants.CHANNEL_ENERGY_START),
-                        new QuantityType<Energy>(responseData.data.e2, Units.KILOWATT_HOUR));
-                updateState(new ChannelUID(dc2ChannelGroupUID, APsystemsEZ1BindingConstants.CHANNEL_ENERGY_LIFETIME),
-                        new QuantityType<Energy>(responseData.data.te2, Units.KILOWATT_HOUR));
-
-                updateState(new ChannelUID(deviceChannelGroupUID, APsystemsEZ1BindingConstants.CHANNEL_POWER),
-                        new QuantityType<Power>(responseData.data.p1 + responseData.data.p2, Units.WATT));
-                updateState(new ChannelUID(deviceChannelGroupUID, APsystemsEZ1BindingConstants.CHANNEL_ENERGY_START),
-                        new QuantityType<Energy>(responseData.data.e1 + responseData.data.e2, Units.KILOWATT_HOUR));
-                updateState(new ChannelUID(deviceChannelGroupUID, APsystemsEZ1BindingConstants.CHANNEL_ENERGY_LIFETIME),
-                        new QuantityType<Energy>(responseData.data.te1 + responseData.data.te2, Units.KILOWATT_HOUR));
-            } else {
+            if (responseData == null || stopPolling) {
                 return;
+            }
+
+            if (isResponseValid(responseData)) {
+                updateStatus(ThingStatus.ONLINE);
+                updateChannelStatesFor(responseData);
+            } else {
+                logger.warn("Inverter response from endpoint {} was not valid.", EZ1OutputDataResponseData.class);
             }
         }
 
         // getMaxPower
         {
             var responseData = pollEndpointFor(EZ1MaxPowerResponseData.class);
-            if (responseData != null) {
-                if (stopPolling) {
-                    return;
-                }
-                updateStatus(ThingStatus.ONLINE);
-                updateState(new ChannelUID(deviceChannelGroupUID, APsystemsEZ1BindingConstants.CHANNEL_MAX_PWR),
-                        new QuantityType<Power>(responseData.data.maxPower, Units.WATT));
-            } else {
+            if (responseData == null || stopPolling) {
                 return;
+            }
+            if (isResponseValid(responseData)) {
+                updateStatus(ThingStatus.ONLINE);
+                updateChannelStatesFor(responseData);
+            } else {
+                logger.warn("Inverter response from endpoint {} was not valid.", EZ1MaxPowerResponseData.class);
             }
         }
 
         // getAlarm
         {
             var responseData = pollEndpointFor(EZ1AlarmResponseData.class);
-            if (responseData != null) {
-                if (stopPolling) {
-                    return;
-                }
-                updateStatus(ThingStatus.ONLINE);
-
-                updateState(new ChannelUID(deviceChannelGroupUID, APsystemsEZ1BindingConstants.CHANNEL_ALARM_OE),
-                        OnOffType.from(responseData.data.oe));
-                updateState(new ChannelUID(deviceChannelGroupUID, APsystemsEZ1BindingConstants.CHANNEL_ALARM_OG),
-                        OnOffType.from(responseData.data.og));
-
-                updateState(new ChannelUID(dc1ChannelGroupUID, APsystemsEZ1BindingConstants.CHANNEL_ALARM_ISCE),
-                        OnOffType.from(responseData.data.isce1));
-                updateState(new ChannelUID(dc2ChannelGroupUID, APsystemsEZ1BindingConstants.CHANNEL_ALARM_ISCE),
-                        OnOffType.from(responseData.data.isce2));
-            } else {
+            if (responseData == null || stopPolling) {
                 return;
+            }
+            if (isResponseValid(responseData)) {
+                updateStatus(ThingStatus.ONLINE);
+                updateChannelStatesFor(responseData);
+            } else {
+                logger.warn("Inverter response from endpoint {} was not valid.", EZ1AlarmResponseData.class);
             }
         }
 
         // getOnOff
         {
             var responseData = pollEndpointFor(EZ1OnOffResponseData.class);
-            if (responseData != null) {
-                if (stopPolling) {
-                    return;
-                }
-                updateStatus(ThingStatus.ONLINE);
-                // 0 -> On, 1 -> Off
-                updateState(new ChannelUID(deviceChannelGroupUID, APsystemsEZ1BindingConstants.CHANNEL_STATUS),
-                        responseData.data.status.equalsIgnoreCase("0") ? OnOffType.ON : OnOffType.OFF);
-            } else {
+            if (responseData == null || stopPolling) {
                 return;
+            }
+            if (isResponseValid(responseData)) {
+                updateStatus(ThingStatus.ONLINE);
+                updateChannelStatesFor(responseData);
+            } else {
+                logger.warn("Inverter response from endpoint {} was not valid.", EZ1OnOffResponseData.class);
             }
         }
     }
 
     @Nullable
     private <T extends EZ1ResponseData> T pollEndpointFor(Class<T> type) {
-        String endpoint = APsystemsEZ1BindingConstants.RESPONSE_DATA_GET_ENDPOINT_MAP.get(type);
+        var endpoint = APsystemsEZ1BindingConstants.RESPONSE_DATA_GET_ENDPOINT_MAP.get(type);
+        logger.trace("Poll endpoint: {} ", endpoint);
+        ;
         if (endpoint == null) {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, "@text/error.invalid.endpoint");
             return null;
         }
 
-        Request request = httpClient.newRequest(config.hostname, config.port).path(endpoint).method(HttpMethod.GET)
+        var request = httpClient.newRequest(config.hostname, config.port).path(endpoint).method(HttpMethod.GET)
                 .timeout(2, TimeUnit.SECONDS);
         var response = sendRequest(request);
         if (response == null) {
+            logger.trace("Response was null");
             return null;
         }
         var parsedRespone = parseResponse(type, response);
@@ -323,5 +292,65 @@ public class APsystemsEZ1Handler extends BaseThingHandler {
                     "@text/error.communication.timeout");
         }
         return null;
+    }
+
+    private boolean isResponseValid(EZ1ResponseData responseData) {
+        return responseData.message.contentEquals("SUCCESS");
+    }
+
+    private void updateChannelStatesFor(EZ1AlarmResponseData responseData) {
+        updateState(new ChannelUID(deviceChannelGroupUID, APsystemsEZ1BindingConstants.CHANNEL_ALARM_OE),
+                OnOffType.from(responseData.data.oe));
+        updateState(new ChannelUID(deviceChannelGroupUID, APsystemsEZ1BindingConstants.CHANNEL_ALARM_OG),
+                OnOffType.from(responseData.data.og));
+
+        updateState(new ChannelUID(dc1ChannelGroupUID, APsystemsEZ1BindingConstants.CHANNEL_ALARM_ISCE),
+                OnOffType.from(responseData.data.isce1));
+        updateState(new ChannelUID(dc2ChannelGroupUID, APsystemsEZ1BindingConstants.CHANNEL_ALARM_ISCE),
+                OnOffType.from(responseData.data.isce2));
+    }
+
+    private void updateChannelStatesFor(EZ1DeviceInfoResponseData responseData) {
+        getThing().setProperties(
+                Map.ofEntries(Map.entry(APsystemsEZ1BindingConstants.PROPERTY_DEVICE_ID, responseData.data.deviceId),
+                        Map.entry(APsystemsEZ1BindingConstants.PROPERTY_DEVICE_VERSION, responseData.data.devVer),
+                        Map.entry(APsystemsEZ1BindingConstants.PROPERTY_IP_ADDRESS, responseData.data.ipAddr),
+                        Map.entry(APsystemsEZ1BindingConstants.PROPERTY_MIN_POWER, responseData.data.minPower),
+                        Map.entry(APsystemsEZ1BindingConstants.PROPERTY_MAX_POWER, responseData.data.maxPower),
+                        Map.entry(APsystemsEZ1BindingConstants.PROPERTY_SSID, responseData.data.ssid)));
+    }
+
+    private void updateChannelStatesFor(EZ1MaxPowerResponseData responseData) {
+        updateState(new ChannelUID(deviceChannelGroupUID, APsystemsEZ1BindingConstants.CHANNEL_MAX_PWR),
+                new QuantityType<Power>(responseData.data.maxPower, Units.WATT));
+    }
+
+    private void updateChannelStatesFor(EZ1OnOffResponseData responseData) {
+        // 0 -> On, 1 -> Off
+        updateState(new ChannelUID(deviceChannelGroupUID, APsystemsEZ1BindingConstants.CHANNEL_STATUS),
+                responseData.data.status.equalsIgnoreCase("0") ? OnOffType.ON : OnOffType.OFF);
+    }
+
+    private void updateChannelStatesFor(EZ1OutputDataResponseData responseData) {
+        updateState(new ChannelUID(dc1ChannelGroupUID, APsystemsEZ1BindingConstants.CHANNEL_POWER),
+                new QuantityType<Power>(responseData.data.p1, Units.WATT));
+        updateState(new ChannelUID(dc1ChannelGroupUID, APsystemsEZ1BindingConstants.CHANNEL_ENERGY_START),
+                new QuantityType<Energy>(responseData.data.e1, Units.KILOWATT_HOUR));
+        updateState(new ChannelUID(dc1ChannelGroupUID, APsystemsEZ1BindingConstants.CHANNEL_ENERGY_LIFETIME),
+                new QuantityType<Energy>(responseData.data.te1, Units.KILOWATT_HOUR));
+
+        updateState(new ChannelUID(dc2ChannelGroupUID, APsystemsEZ1BindingConstants.CHANNEL_POWER),
+                new QuantityType<Power>(responseData.data.p2, Units.WATT));
+        updateState(new ChannelUID(dc2ChannelGroupUID, APsystemsEZ1BindingConstants.CHANNEL_ENERGY_START),
+                new QuantityType<Energy>(responseData.data.e2, Units.KILOWATT_HOUR));
+        updateState(new ChannelUID(dc2ChannelGroupUID, APsystemsEZ1BindingConstants.CHANNEL_ENERGY_LIFETIME),
+                new QuantityType<Energy>(responseData.data.te2, Units.KILOWATT_HOUR));
+
+        updateState(new ChannelUID(deviceChannelGroupUID, APsystemsEZ1BindingConstants.CHANNEL_POWER),
+                new QuantityType<Power>(responseData.data.p1 + responseData.data.p2, Units.WATT));
+        updateState(new ChannelUID(deviceChannelGroupUID, APsystemsEZ1BindingConstants.CHANNEL_ENERGY_START),
+                new QuantityType<Energy>(responseData.data.e1 + responseData.data.e2, Units.KILOWATT_HOUR));
+        updateState(new ChannelUID(deviceChannelGroupUID, APsystemsEZ1BindingConstants.CHANNEL_ENERGY_LIFETIME),
+                new QuantityType<Energy>(responseData.data.te1 + responseData.data.te2, Units.KILOWATT_HOUR));
     }
 }
