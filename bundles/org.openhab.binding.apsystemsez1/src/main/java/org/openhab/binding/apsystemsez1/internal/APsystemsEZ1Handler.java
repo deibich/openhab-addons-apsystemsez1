@@ -260,6 +260,7 @@ public class APsystemsEZ1Handler extends BaseThingHandler {
     @Nullable
     private <T extends EZ1ResponseData> T parseResponse(Class<T> type, ContentResponse response) {
         var gsonObj = new Gson();
+        logger.trace("Raw Response: {}", response.getContentAsString());
         var returnData = gsonObj.fromJson(response.getContentAsString(), type);
         if (returnData == null) {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, "@text/error.invalid.data");
@@ -272,6 +273,7 @@ public class APsystemsEZ1Handler extends BaseThingHandler {
     private ContentResponse sendRequest(Request request) {
         try {
             var response = request.send();
+            logger.trace("HTTP Response Code: {}", response.getStatus());
             if (response.getStatus() == 200) {
                 return response;
             } else {
