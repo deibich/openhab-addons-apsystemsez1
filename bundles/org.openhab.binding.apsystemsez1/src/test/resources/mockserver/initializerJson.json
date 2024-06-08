@@ -94,7 +94,7 @@
         "type": "JSON",
         "json": {
             "data": {
-                "state": "0"
+                "status": "0"
             },
             "message": "SUCCESS",
             "deviceId": "E07000000001"
@@ -112,7 +112,7 @@
         "type": "JSON",
         "json": {
             "data": {
-                "state": "0"
+                "status": "0"
             },
             "message": "SUCCESS",
             "deviceId": "E07000000001"
