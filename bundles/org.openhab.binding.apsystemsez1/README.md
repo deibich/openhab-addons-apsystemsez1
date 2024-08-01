@@ -6,7 +6,7 @@ The inverters endpoint is polled in a fixed intervall.
 
 ## Supported Things
 
-Only one thing is supported: The `APsystems EZ1 Inverter` Thing communicates with a Inverter with enabled local API.
+Only one thing is supported: The `APsystems EZ1 Inverter` thing. The binding communicates with the inverter over its local API. To enable the local API of the inverter, connect with the _AP EasyPower_ app using bluetooth. Then go to _Settings_ -> _Local Mode_ and enable the switch _Enable Local Mode_. Then choose the option _Continuously_.
 
 ## Discovery
 
