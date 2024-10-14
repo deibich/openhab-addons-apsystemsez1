@@ -161,6 +161,8 @@ public class APsystemsEZ1Handler extends BaseThingHandler {
             return;
         }
 
+        // TODO: Do this request only on init
+        // TODO: Is this request required after setMaxPower?
         // getDeviceInfo
         if (getThing().getStatus() != ThingStatus.ONLINE) {
             var responseData = pollEndpointFor(EZ1DeviceInfoResponseData.class);
@@ -176,7 +178,7 @@ public class APsystemsEZ1Handler extends BaseThingHandler {
         }
 
         // getOutputData
-        {
+        if (anyChannelLinkedForEndpointData(EZ1OutputDataResponseData.class)) {
             var responseData = pollEndpointFor(EZ1OutputDataResponseData.class);
             if (responseData == null || stopPolling) {
                 return;
@@ -191,7 +193,7 @@ public class APsystemsEZ1Handler extends BaseThingHandler {
         }
 
         // getMaxPower
-        {
+        if (anyChannelLinkedForEndpointData(EZ1MaxPowerResponseData.class)) {
             var responseData = pollEndpointFor(EZ1MaxPowerResponseData.class);
             if (responseData == null || stopPolling) {
                 return;
@@ -205,7 +207,7 @@ public class APsystemsEZ1Handler extends BaseThingHandler {
         }
 
         // getAlarm
-        {
+        if (anyChannelLinkedForEndpointData(EZ1AlarmResponseData.class)) {
             var responseData = pollEndpointFor(EZ1AlarmResponseData.class);
             if (responseData == null || stopPolling) {
                 return;
@@ -219,7 +221,7 @@ public class APsystemsEZ1Handler extends BaseThingHandler {
         }
 
         // getOnOff
-        {
+        if (anyChannelLinkedForEndpointData(EZ1OnOffResponseData.class)) {
             var responseData = pollEndpointFor(EZ1OnOffResponseData.class);
             if (responseData == null || stopPolling) {
                 return;
@@ -354,5 +356,15 @@ public class APsystemsEZ1Handler extends BaseThingHandler {
                 new QuantityType<Energy>(responseData.data.e1 + responseData.data.e2, Units.KILOWATT_HOUR));
         updateState(new ChannelUID(deviceChannelGroupUID, APsystemsEZ1BindingConstants.CHANNEL_ENERGY_LIFETIME),
                 new QuantityType<Energy>(responseData.data.te1 + responseData.data.te2, Units.KILOWATT_HOUR));
+    }
+
+    private <T extends EZ1ResponseData> boolean anyChannelLinkedForEndpointData(Class<T> responseDataClass) {
+        for (var channelIdString : APsystemsEZ1BindingConstants.RESPONSE_DATA_CHANNEL_UID_LIST_MAP
+                .get(responseDataClass)) {
+            if (this.isLinked(channelIdString)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

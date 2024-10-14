@@ -12,6 +12,7 @@
  */
 package org.openhab.binding.apsystemsez1.internal;
 
+import java.util.List;
 import java.util.Map;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
@@ -84,4 +85,19 @@ public class APsystemsEZ1BindingConstants {
             Map.entry(EZ1MaxPowerResponseData.class, API_ENDPOINT_GET_MAX_POWER),
             Map.entry(EZ1AlarmResponseData.class, API_ENDPOINT_GET_ALARM),
             Map.entry(EZ1OnOffResponseData.class, API_ENDPOINT_GET_ON_OFF));
+
+    public static final Map<Class<? extends EZ1ResponseData>, List<String>> RESPONSE_DATA_CHANNEL_UID_LIST_MAP = Map
+            .ofEntries(Map.entry(EZ1DeviceInfoResponseData.class, List.of()), Map.entry(EZ1OutputDataResponseData.class,
+                    List.of(CHANNEL_GROUP_DC1 + ":" + CHANNEL_POWER, CHANNEL_GROUP_DC1 + ":" + CHANNEL_ENERGY_START,
+                            CHANNEL_GROUP_DC1 + ":" + CHANNEL_ENERGY_LIFETIME, CHANNEL_GROUP_DC2 + ":" + CHANNEL_POWER,
+                            CHANNEL_GROUP_DC2 + ":" + CHANNEL_ENERGY_START,
+                            CHANNEL_GROUP_DC2 + ":" + CHANNEL_ENERGY_LIFETIME,
+                            CHANNEL_GROUP_DEVICE + ":" + CHANNEL_POWER,
+                            CHANNEL_GROUP_DEVICE + ":" + CHANNEL_ENERGY_START,
+                            CHANNEL_GROUP_DEVICE + ":" + CHANNEL_ENERGY_LIFETIME)),
+                    Map.entry(EZ1MaxPowerResponseData.class, List.of(CHANNEL_GROUP_DEVICE + ":" + CHANNEL_MAX_PWR)),
+                    Map.entry(EZ1AlarmResponseData.class, List.of(CHANNEL_GROUP_DEVICE + ":" + CHANNEL_ALARM_OE,
+                            CHANNEL_GROUP_DEVICE + ":" + CHANNEL_ALARM_OG, CHANNEL_GROUP_DC1 + ":" + CHANNEL_ALARM_ISCE,
+                            CHANNEL_GROUP_DC2 + ":" + CHANNEL_ALARM_ISCE)),
+                    Map.entry(EZ1OnOffResponseData.class, List.of(CHANNEL_GROUP_DEVICE + ":" + CHANNEL_STATUS)));
 }
