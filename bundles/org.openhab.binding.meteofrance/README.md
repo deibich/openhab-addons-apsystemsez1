@@ -2,8 +2,8 @@
 
 This binding provides information made available by Meteo France:
 
-* Alert level regarding major weather related risk factors (`vigilance` Thing) 
-* Rain intensity forecasts (`rain-forecast`Thing)
+- Alert level regarding major weather related risk factors (`vigilance` Thing)
+- Rain intensity forecasts (`rain-forecast`Thing)
 
 This binding provides its own icon set and provides appropriate static and dynamic SVG icons (see items examples below).
 
@@ -23,25 +23,25 @@ The `api` bridge has only one configuration parameter :
 |-----------|-------------------------------------------------------|
 | apikey    | Data-platform token to access the service. Mandatory. |
 
-To obtain an API key, you must create an account on https://portail-api.meteofrance.fr/web/fr/
+To obtain an API key, you must create an account on <https://portail-api.meteofrance.fr/web/fr/>
 Inside the API Portal, create an application on "Bulletin Vigilance" and generate they API key (set duration to 0).
 
 ## Thing Configuration
 
-The `vigilance` thing has these configuration parameters:
+The `vigilance` Thing has these configuration parameters:
 
 | Parameter  | Description                                                             |
 |------------|-------------------------------------------------------------------------|
 | department | Code of the department (two digits).                                    |
 | refresh    | Refresh interval in minutes. Optional, the default value is 60 minutes. |
 
-The `rain-forecast` thing has this configuration parameters:
+The `rain-forecast` Thing has this configuration parameters:
 
 | Parameter | Description                                                  |
 |-----------|--------------------------------------------------------------|
 | location  | Geo coordinates to be considered by the service.             |
 
-## Channels
+## Channels for `vigilance`
 
 The information that are retrieved is available as these channels:
 
@@ -78,30 +78,51 @@ The information that are retrieved is available as these channels:
 | 2    | Orange | Be "very vigilant" in the concerned areas |
 | 3    | Red    | Absolute vigilance required               |
 
+## Channels for `rain-forecast`
+
+The information that are retrieved is available as these channels:
+
+| Channel ID   | Item Type | Description              |
+|--------------|-----------|--------------------------|
+| update-time  | DateTime  | Observation Timestamp    |
+| intensity    | Number    | Rain intensity level (*) |
+
+(*) Rain intensity values and associated descriptions:
+
+| Code | Description   |
+|------|---------------|
+| 0    | Dry Weather   |
+| 1    | Light Rain    |
+| 2    | Moderate Rain |
+| 3    | Heavy Rain    |
+
 ## Provided icon set
 
 This binding has its own IconProvider and makes available the following list of icons
 
 | Icon Name                       | Dynamic | Illustration |
 |---------------------------------|---------|--------------|
-| oh:meteofrance:vent             |   Yes   | ![](doc/images/vent.svg) |
-| oh:meteofrance:pluie-inondation |   Yes   | ![](doc/images/pluie-inondation.svg) |
-| oh:meteofrance:orage            |   Yes   | ![](doc/images/orage.svg) |
-| oh:meteofrance:inondation       |   Yes   | ![](doc/images/inondation.svg) |
-| oh:meteofrance:neige            |   Yes   | ![](doc/images/neige.svg) |
-| oh:meteofrance:canicule         |   Yes   | ![](doc/images/canicule.svg) |
-| oh:meteofrance:grand-froid      |   Yes   | ![](doc/images/grand-froid.svg) |
-| oh:meteofrance:avalanches       |   Yes   | ![](doc/images/avalanches.svg) |
-| oh:meteofrance:vague-submersion |   Yes   | ![](doc/images/vague-submersion.svg) |
-| oh:meteofrance:meteo_france     |   No    | ![](doc/images/meteo_france.svg) |
-| oh:meteofrance:intensity        |   Yes   | ![](doc/images/intensity.svg) |
+| oh:meteofrance:vent             |   Yes   | ![Vent](doc/images/vent.svg) |
+| oh:meteofrance:pluie-inondation |   Yes   | ![Pluie Inondation](doc/images/pluie-inondation.svg) |
+| oh:meteofrance:orage            |   Yes   | ![Orage](doc/images/orage.svg) |
+| oh:meteofrance:inondation       |   Yes   | ![Inondation](doc/images/inondation.svg) |
+| oh:meteofrance:neige            |   Yes   | ![Neige](doc/images/neige.svg) |
+| oh:meteofrance:canicule         |   Yes   | ![Canicule](doc/images/canicule.svg) |
+| oh:meteofrance:grand-froid      |   Yes   | ![Grand Froid](doc/images/grand-froid.svg) |
+| oh:meteofrance:avalanches       |   Yes   | ![Avalanches](doc/images/avalanches.svg) |
+| oh:meteofrance:vague-submersion |   Yes   | ![Vague Submersion](doc/images/vague-submersion.svg) |
+| oh:meteofrance:meteo_france     |   No    | ![Meteo France](doc/images/meteo_france.svg) |
+| oh:meteofrance:intensity        |   Yes   | ![Intensity](doc/images/intensity.svg) |
 
 ## Full Example
 
 meteoalert.things:
 
 ```java
-Thing meteofrance:department:yvelines @ "MyCity" [department="78", refresh=12]
+Bridge meteofrance:api:local "Portail Météo-France" [ apikey="ey......FIjG1MIC9lmG5t6HygPAPg=="] {
+    vigilance yvelines "Vigilance Météo" [ department="78" ]
+    rain-forecast yvelines [ location="48.764207,2.05948" ]
+}
 ```
 
 meteoalert.items:
@@ -128,5 +149,18 @@ Image      MA_icon_orage              "Orage"                     <oh:meteofranc
 Image      MA_icon_avalanche          "Avalanche"                 <oh:meteofrance:avalanches>         (gMeteoAlert)   {channel="meteofrance:department:yvelines:avalanches-icon"}
     
 DateTime   MA_ObservationTS           "Timestamp [%1$tH:%1$tM]"   <time>                              (gMeteoAlert)   {channel="meteofrance:department:yvelines:observation-time"}
+
+Number     Intensite_Pluie          "Intensité Pluie"            <oh:meteofrance:intensity>           (gMeteoAlert)  {channel="meteofrance:rain-forecast:yvelines:intensity" }
+```
+
+jdbc.persist:
+
+```java
+
+Items {
+   * : strategy = everyChange
+   Intensite_Pluie : strategy = forecast
+}
+
 
 ```

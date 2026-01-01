@@ -27,7 +27,7 @@ The `reader` Thing has the following configuration parameters:
 | `customPatterns`              | String  |   no     |                                  | Search patterns separated by \| character for custom events.                            |
 | `customBlacklistingPatterns`  | String  |   no     |                                  | Search patterns for blacklisting unwanted custom events separated by \| character.      |
 
-Search patterns follows [Java regular expression syntax](https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/regex/Pattern.html).
+Search patterns follows [Java regular expression syntax](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/regex/Pattern.html).
 Be aware that search patterns are case sensitive.
 
 ## Channels
@@ -117,7 +117,7 @@ You could easily send thousand of _spam_ emails in short period if e.g. one bind
 
 ### Thing status
 
-Check thing status for errors.
+Check Thing status for errors.
 
 ### Verbose logging
 

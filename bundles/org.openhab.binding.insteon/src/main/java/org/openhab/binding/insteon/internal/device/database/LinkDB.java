@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2010-2024 Contributors to the openHAB project
+/*
+ * Copyright (c) 2010-2025 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -24,7 +24,6 @@ import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.binding.insteon.internal.device.InsteonAddress;
 import org.openhab.binding.insteon.internal.device.InsteonDevice;
 import org.openhab.binding.insteon.internal.device.InsteonModem;
-import org.openhab.binding.insteon.internal.device.InsteonScene;
 import org.openhab.binding.insteon.internal.utils.HexUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,8 +35,6 @@ import org.slf4j.LoggerFactory;
  */
 @NonNullByDefault
 public class LinkDB {
-    public static final int RECORD_BYTE_SIZE = 8;
-
     private static enum DatabaseStatus {
         EMPTY,
         COMPLETE,
@@ -53,9 +50,9 @@ public class LinkDB {
 
     private final Logger logger = LoggerFactory.getLogger(LinkDB.class);
 
-    private InsteonDevice device;
-    private TreeMap<Integer, LinkDBRecord> records = new TreeMap<>(Collections.reverseOrder());
-    private TreeMap<Integer, LinkDBChange> changes = new TreeMap<>(Collections.reverseOrder());
+    private final InsteonDevice device;
+    private final TreeMap<Integer, LinkDBRecord> records = new TreeMap<>(Collections.reverseOrder());
+    private final TreeMap<Integer, LinkDBChange> changes = new TreeMap<>(Collections.reverseOrder());
     private DatabaseStatus status = DatabaseStatus.EMPTY;
     private int delta = -1;
     private int firstLocation = 0x0FFF;
@@ -92,10 +89,6 @@ public class LinkDB {
         synchronized (records) {
             return records.isEmpty() ? null : records.firstEntry().getValue();
         }
-    }
-
-    public int getFirstRecordComponentId() {
-        return Optional.ofNullable(getFirstRecord()).map(LinkDBRecord::getComponentId).orElse(0);
     }
 
     public @Nullable LinkDBRecord getRecord(int location) {
@@ -257,8 +250,8 @@ public class LinkDB {
      * @return first available record location if found, otherwise the next lowest record or change location
      */
     public int getNextAvailableLocation() {
-        return getRecords().stream().filter(LinkDBRecord::isAvailable).map(LinkDBRecord::getLocation).findFirst()
-                .orElse(Math.min(getLastRecordLocation(), getLastChangeLocation() - RECORD_BYTE_SIZE));
+        return getRecords().stream().filter(LinkDBRecord::isAvailable).mapToInt(LinkDBRecord::getLocation).findFirst()
+                .orElse(Math.min(getLastRecordLocation(), getLastChangeLocation() - LinkDBRecord.SIZE));
     }
 
     /**
@@ -305,13 +298,12 @@ public class LinkDB {
      */
     public void load(long delay) {
         DatabaseManager dbm = getDatabaseManager();
-        if (!device.isAwake() || !device.isResponding()) {
-            logger.debug("deferring load link db for {}, device is not awake or responding", device.getAddress());
+        if (!device.isAwake() || !device.isOnline()) {
+            logger.debug("deferring load link db for {}, device is not awake or online", device.getAddress());
             setReload(true);
         } else if (dbm == null) {
             logger.debug("unable to load link db for {}, database manager not available", device.getAddress());
         } else {
-            clear();
             setStatus(DatabaseStatus.LOADING);
             dbm.read(device, delay);
         }
@@ -334,8 +326,8 @@ public class LinkDB {
         if (getChanges().isEmpty()) {
             logger.debug("no changes to update link db for {}", device.getAddress());
             setUpdate(false);
-        } else if (!device.isAwake() || !device.isResponding()) {
-            logger.debug("deferring update link db for {}, device is not awake or responding", device.getAddress());
+        } else if (!device.isAwake() || !device.isOnline()) {
+            logger.debug("deferring update link db for {}, device is not awake or online", device.getAddress());
             setUpdate(true);
         } else if (dbm == null) {
             logger.debug("unable to update link db for {}, database manager not available", device.getAddress());
@@ -353,10 +345,10 @@ public class LinkDB {
     public @Nullable LinkDBRecord addRecord(LinkDBRecord record) {
         synchronized (records) {
             LinkDBRecord prevRecord = records.put(record.getLocation(), record);
-            // move last record if overwritten
-            if (prevRecord != null && prevRecord.isLast()) {
-                int location = prevRecord.getLocation() - RECORD_BYTE_SIZE;
-                records.put(location, LinkDBRecord.withNewLocation(location, prevRecord));
+            // move last record if overwritten by a different record
+            if (prevRecord != null && prevRecord.isLast() && !prevRecord.equals(record)) {
+                int location = prevRecord.getLocation() - LinkDBRecord.SIZE;
+                records.put(location, prevRecord.withNewLocation(location));
                 if (logger.isTraceEnabled()) {
                     logger.trace("moved last record for {} to location {}", device.getAddress(),
                             HexUtils.getHexString(location));
@@ -416,7 +408,7 @@ public class LinkDB {
      *
      * @param change the change to add
      */
-    public void addChange(LinkDBChange change) {
+    private void addChange(LinkDBChange change) {
         synchronized (changes) {
             LinkDBChange prevChange = changes.put(change.getLocation(), change);
             if (prevChange == null) {
@@ -531,7 +523,7 @@ public class LinkDB {
 
         int firstLocation = records.firstKey();
         int lastLocation = records.lastKey();
-        int expected = (firstLocation - lastLocation) / RECORD_BYTE_SIZE + 1;
+        int expected = (firstLocation - lastLocation) / LinkDBRecord.SIZE + 1;
         if (firstLocation != getFirstRecordLocation()) {
             logger.debug("got unexpected first record location for {}", device.getAddress());
             setStatus(DatabaseStatus.PARTIAL);
@@ -562,8 +554,8 @@ public class LinkDB {
                     .filter(record -> record.isActive() && record.isResponder()
                             && record.getAddress().equals(modem.getAddress()) && record.getComponentId() == componentId
                             && record.getOnLevel() > 0)
-                    .map(LinkDBRecord::getGroup).filter(InsteonScene::isValidGroup).map(Integer::valueOf).distinct()
-                    .toList();
+                    .map(LinkDBRecord::getGroup).filter(modem.getDB()::isValidBroadcastGroup).map(Integer::valueOf)
+                    .distinct().toList();
         }
         return groups;
     }

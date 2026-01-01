@@ -13,7 +13,6 @@ To see what features each brand has implemented from their APIs, please see this
 - Check this readme for any setup steps for your brand.
 - Check if the camera is offline, if so there will be a reason listed.
 - Always look at the log files with TRACE enabled, as any FFmpeg and camera errors may not reach the INFO logs.
-To enable TRACE logging, enter this in the openHAB console `log:set TRACE org.openhab.binding.ipcamera`.
 - Search the forum using any log messages to find how others have already solved it.
 - Only after doing the above ask for help in the forum and create a new thread.
 
@@ -33,7 +32,7 @@ Some cameras allow the key frame to be created every second or a different amoun
 
 ### ESP32 Cameras
 
-These cameras do not have the ability to create H.264 streams and hence can not be used with HLS, however all other features should work.
+These cameras do not have the ability to create H.264 streams and hence cannot be used with HLS, however all other features should work.
 Due to many custom firmwares available, you may need to ask the firmware developer what the URLs are for snapshots and MJPEG streams if they have changed the defaults from what the Arduino IDE sample code uses.
 Another limitation is that they can only provide a single stream at a time, so you need to setup the `ffmpegInput` to use the ipcamera.mjpeg feed from the openHAB server and change `ffmpegInputOptions` to "-f mjpeg" so FFmpeg knows the input is MJPEG format and not H.264.
 
@@ -42,7 +41,6 @@ Example:
 ```java
 Thing ipcamera:generic:Esp32Cam
 [
-    ipAddress="192.168.1.181",
     gifPreroll=1,
     snapshotUrl="http://192.168.1.181/capture",
     mjpegUrl="http://192.168.1.181:81/stream",
@@ -54,7 +52,7 @@ Thing ipcamera:generic:Esp32Cam
 
 ### Amcrest
 
-It is better to always setup your Amcrest camera as a `dahua` thing type.
+It is better to always setup your Amcrest camera as a `dahua` Thing type.
 The old alarm polling based method is used if you setup as `amcrest`, and the newer/better event based method is used if you setup as `dahua` instead.
 All other features should be the same between the two.
 
@@ -128,8 +126,10 @@ Thing ipcamera:hikvision:West "West Camera"
 
 ### Reolink
 
-- NVR's made by Reolink have ONVIF disabled by default and may require a screen connected to the hardware to enable ONVIF or newer firmwares may be able to do this via their app or web UI.
+- NVR's made by Reolink have ONVIF disabled by default and may require a screen connected to the hardware to enable ONVIF, or newer firmwares may be able to do this via their app or web UI.
 - This binding will use the Reolink API for polling the alarms if the `nvrChannel` is 1 or higher and does not need ONVIF to be enabled. To use ONVIF event methods for the alarms, you can set `nvrChannel` to 0.
+- Cameras have ONVIF, RTSP and HTTP disabled by default, to enable these required features, do the following: DEVICE SETTINGS>NETWORK>ADVANCED>PORT SETTINGS> then turn these on leaving the default port number alone.
+- Consider setting the substream of the camera to be 4 FPS and to 640*360 as this will lower CPU load if using the ipcamera.mjpeg stream.
 
 ## Discovery
 
@@ -137,21 +137,21 @@ The discovery feature of openHAB can be used to find and setup ONVIF cameras.
 This method should be preferred as it will discover the cameras IP, ports and URLs for you, making the setup much easier.
 The binding needs to use UDP port 3702 to discover the cameras with, so this port needs to be unblocked by your firewall or add the camera manually if the camera is not auto found.
 To use the discovery, just press the `+` icon located in the Inbox, then select the IpCamera binding from the list of installed bindings.
-The binding will only search using openHAB's currently selected primary network address, see <https://www.openhab.org/docs/settings/>.
+The binding will only search using openHAB's currently selected primary network address.
 If your camera is not found after a few searches, it may not be ONVIF and in this case you will need to manually add the camera via the UI.
-Cameras that are not ONVIF should be added as a `generic` thing type and you will need to provide the URLs manually.
+Cameras that are not ONVIF should be added as a `generic` Thing type and you will need to provide the URLs manually.
 
 ## Supported Things
 
 If using openHAB's textual configuration, or when needing to setup HABpanel/sitemaps, you may need to know what your camera is as a "thing type".
 
-Example: The thing type for a camera with no ONVIF support is "generic".
+Example: The Thing type for a camera with no ONVIF support is "generic".
 
 | Thing Type ID | Description |
 |-|-|
 | `generic` | For any camera that is not ONVIF compatible, yet has working RTSP or HTTP URLs. |
 | `onvif` | Use for all ONVIF cameras that do not have an API. |
-| `amcrest` | Only use for if your Amcrest cameras wont work as a `dahua` thing. This uses an older polling based method for alarms that is not as efficient as the newer method used in `dahua`. Amcrest are made by Dahua and hence the API is similar. |
+| `amcrest` | Only use for if your Amcrest cameras wont work as a `dahua` Thing. This uses an older polling based method for alarms that is not as efficient as the newer method used in `dahua`. Amcrest are made by Dahua and hence the API is similar. |
 | `dahua` | Use for all Dahua and Amcrest cameras that support the API. |
 | `doorbird` | Use for all current Doorbird cameras as they support an API as well as ONVIF. |
 | `foscam` | Use for all current Foscam HD cameras as they support an API as well as ONVIF. |
@@ -194,7 +194,7 @@ If you do not specify any of these, the binding will use the default which shoul
 | `alarmInputUrl` | A URL you can use for the FFmpeg created Audio and Motion Alarms as they don't require high res feeds as they are not seen. |
 | `customMotionAlarmUrl`| Foscam only, for custom enable motion alarm use. More info found in Foscam's setup steps. |
 | `customAudioAlarmUrl`| Foscam only, for custom enable audio alarm use. More info found in Foscam's setup steps. |
-| `mjpegUrl`| A HTTP URL for MJPEG format streams. If you enter 'ffmpeg' the stream can be generated from the RTSP URL. |
+| `mjpegUrl`| A HTTP or RTSP URL to use for MJPEG streams. If you enter 'ffmpeg' the stream can be generated using the RTSP URL. |
 | `ffmpegInput`| Best if this stream is in H.264 format and can be RTSP or HTTP URLs. Leave this blank to use the auto detected RTSP address for ONVIF cameras. |
 | `ffmpegInputOptions` | Allows you to specify any options before the -i on the commands for FFmpeg. If you have an ESP32 camera that only has a mjpeg stream then make this equal `-f mjpeg`. |
 | `ffmpegLocation`| The full path including the filename for where you have installed FFmpeg. The default should work for most Linux installs but if using windows use this format: `c:\ffmpeg\bin\ffmpeg.exe` |
@@ -207,79 +207,93 @@ If you do not specify any of these, the binding will use the default which shoul
 | `gifPreroll`| Store this many snapshots from BEFORE you trigger a GIF creation. Default: `0` will not use snapshots and will instead use a realtime stream from the ffmpegInput URL |
 | `ipWhitelist`| Enter any IPs inside brackets that you wish to allow to access the video stream. `DISABLE` the default value will turn this feature off.  Example: `ipWhitelist="(127.0.0.1)(192.168.0.99)"` |
 | `ptzContinuous`| If set to false (default) the camera will move using Relative commands, If set to true the camera will instead use continuous movements and will require an `OFF` command to stop the movement. |
+| `onvifEventServiceType`| ONVIF event method to use. If camera does not report event capabilities, the event method can be forced here. |
+| | `0` - Auto detect event capabilities. (Default) ONVIF event capabilities are detected automatically. PullMessages is preferred over WSBaseNotification because there is no way to determine if an WSBaseNotification subscription exists on startup. |
+| | `1` - ONVIF events disabled. |
+| | `2` - Force ONVIF PullMessages event method even if the camera does not claim to support this. |
+| | `3` - Force ONVIF WSBaseSubscription event method even if the camera does not claim to support this. |
 
 ## Channels
 
 Each camera brand will have different channels depending on how much of the support for an API has been added.
 The channels are kept consistent as much as possible from brand to brand to make upgrading to a different camera easier.
 
-| Channel                       | Type    | Read/Write | Description                                                                              |
-|-------------------------------|---------|------------|------------------------------------------------------------------------------------------|
-| `activateAlarmOutput`     | Switch | RW |Toggles a cameras relay output 1. |
-| `activateAlarmOutput2`    | Switch | RW | Toggles a cameras relay output 2. |
-| `animalAlarm`               | Switch | RW | Toggles when an animal is in view. |
-| `audioAlarm`                | Switch | R  | When the camera detects noise above a threshold this switch will move to ON. |
-| `autoLED`                    | Switch | RW |When ON this sets a cameras IR LED to automatically turn on or off. |
-| `autoTracking`              | Switch | RW |Turn the automatic mode for tracking ON or OFF. |
-| `autoWhiteLED`              | Switch | RW |When ON this sets a cameras visible white LED to automatically turn on or off. |
-| `carAlarm`                   | Switch | RW | When a car is detected the switch will turn ON. |
-| `cellMotionAlarm`           | Switch | R | ONVIF cameras only will reflect the status of the ONVIF event of the same name. |
-| `doorBell`                    | Switch | R | Doorbird only, will reflect the status of the doorbell button. |
-| `enableAudioAlarm`          | Switch | RW |Allows the audio alarm to be turned ON or OFF. |
-| `enableEmail`                 | Switch | RW |Allows the email features to be turned ON or OFF. |
-| `enableExternalAlarmInput` | Switch | RW |Hikvision and Instar allow the Alarm input terminals to be disabled by this control. |
-| `enableFieldDetectionAlarm`| Switch | RW |Allows the field detection alarm to be turned ON or OFF. Some cameras will call this the Intrusion Alarm. |
-| `enableFTP`                   | Switch | RW |Turn the cameras internal FTP recordings ON or OFF. |
-| `enableLED`                   | Switch | RW |Turn the IR LED ON or OFF. Some cameras have 3 states the LED can be in, so see the `autoLED` channel. |
-| `enableLineCrossingAlarm`  | Switch | RW |Turns the line crossing alarm for API cameras, ON and OFF. |
-| `enableMotionAlarm`         | Switch | RW |Turns the motion alarm ON and OFF for API cameras. This will not effect FFmpeg based alarms which have their own control. |
-| `enablePirAlarm`             | Switch | RW |Turn PIR sensor ON or OFF. |
-| `enablePush`                  | Switch | RW | Allows the push notification features to be turned ON or OFF. |
-| `enableRecordings`          | Switch | RW |Turn the cameras internal recordings ON or OFF. |
-| `externalAlarmInput`        | Switch | R | Reflects the status of the alarm input terminals on some cameras. |
-| `externalAlarmInput2`       | Switch | R |  | Reflects the status of the alarm input 2 terminals on some cameras. |
-| `externalLight`              | Switch | RW |Some cameras have a dedicated relay output for turning lights on and off with. |
-| `externalMotion`             | Switch | RW |Can be used to inform the camera if it has motion in its view area. Handy if you own a PIR or any other kind of external sensor. If you use the autofps.mjpeg feature, this could increase the frame rate when a door that was closed is opened. Note: It will not be passed onto your camera and will not trigger any recordings. |
-| `faceDetected`               | Switch | R | When a camera detects a face (API cameras only) this switch will move to ON. |
-| `fieldDetectionAlarm`       | Switch | R | Reflects the cameras status for the field or intrusion alarm. |
-| `ffmpegMotionAlarm`         | Switch | R | The status of the FFmpeg based motion alarm. |
-| `ffmpegMotionControl`       | Dimmer | RW | This control allows FFmpeg to detect movement from a RTSP or HTTP source and inform openHAB. The channel that will move is called `ffmpegMotionAlarm`. |
-| `gifHistory`                 | String | RW |The 50 most recent filenames the binding has used unless reset. |
-| `gifHistoryLength`          | Number | RW |How many filenames are in the `gifHistory`. |
-| `gotoPreset`                 | String | RW |ONVIF cameras that can move only. Will cause the camera to move to a preset location. |
-| `hlsUrl`                      | String | RW |The URL for the ipcamera.m3u8 file. |
-| `humanAlarm`                 | Switch | RW |When a camera detects a human this switch will turn ON. |
-| `imageUrl`                   | String | RW |The URL for the ipcamera.jpg file. |
-| `itemLeft`                   | Switch | R | | Will turn ON if an API camera detects an item has been left behind. |
-| `itemTaken`                  | Switch | R | Will turn ON if an API camera detects an item has been stolen. |
-| `lastMotionType`            | String | RW |Cameras with multiple alarm types will update this with which alarm last detected motion, i.e. a lineCrossing, faceDetection or item stolen alarm. You can also use this to create a timestamp of when the last motion was detected by creating a rule when this channel changes. |
-| `lastEventData`             | String | RW | Detailed information about the last smart alarm that can contain information like which Line number was crossed and in which direction. The channel `lastMotionType` will hold the name of the alarm that this data belongs to. |
-| `lineCrossingAlarm`       | Switch | R | Will turn on if the API camera detects motion has crossed a line. |
-| `mjpegUrl`                  | String | RW | The URL for the ipcamera.mjpeg stream. |
-| `motionAlarm`               | Switch | R | The status of the 'video motion' events in ONVIF and API cameras. Also see `cellMotionAlarm` as these can give different results. |
-| `mp4History`                | String | RW | The 50 most recent filenames the binding has used unless reset. |
-| `mp4HistoryLength`         | Number | RW | How many filenames are in the `mp4History`. Setting this to 0 will clear the history. |
-| `pan`                         | Dimmer | RW | Works with ONVIF cameras that can be moved. |
-| `parkingAlarm`              | Switch | R | When an API camera detects a car, this will turn ON. |
-| `pirAlarm`                   | Switch | R | When a camera with PIR ability detects motion, this turns ON. |
-| `privacyMode`               | Switch | RW | Enable or disable the Privacy Mode of newer Amcrest/Dahua cameras. The camera will move the lens way down and stop the stream. |
-| `recordingGif`              | Number | R  | How many seconds recording to GIF for. 0 when file ready. |
-| `recordingMp4`              | Number | R  | How many seconds recording to MP4 for. 0 when file ready. |
-| `rtspUrl`                    | String | RW | The URL for the cameras auto detected RTSP stream. |
-| `sceneChangeAlarm`         | Switch | R  | When an API camera detects the camera has moved, this turns ON. |
-| `startStream`               | Switch | RW | Starts the HLS files being created, if it not manually moved it will indicate if the files are being created on demand. |
-| `storageAlarm`              | Switch | R  | When an ONVIF cameras storage is full and/or removed, this turns ON. |
-| `tamperAlarm`               | Switch | R  | When an ONVIF cameras tamper switch is tripped, this turns ON. |
-| `textOverlay`               | String | RW | Dahua, Instar and Hikvision can overlay any text you enter here over the video stream. |
-| `thresholdAudioAlarm`     | Dimmer | RW |This channel can be linked to a Switch and a Slider. The value of the slider is the value in dB that is detected as noise/alarm down from digital full scale. Higher values are more sensitive and will trigger the alarm with quieter / less noise. |
-| `tilt`                       | Dimmer | RW |Works with ONVIF cameras that can be moved. |
-| `triggerExternalAlarmInput` | Switch | RW | Hikvision cameras can change if the alarm input terminal is ON when high or low. This can be used to manually cause an alarm input event to occur. |
-| `tooBlurryAlarm`           | Switch | R | ONVIF cameras only will reflect the status of the ONVIF event of the same name. |
-| `tooBrightAlarm`           | Switch | R | ONVIF cameras only will reflect the status of the ONVIF event of the same name. |
-| `tooDarkAlarm`             | Switch | R | ONVIF cameras only will reflect the status of the ONVIF event of the same name. |
-| `pollImage`                 | Switch | RW | This control can be used to manually start and stop using your CPU to create snapshots from a RTSP source. If you have a snapshot URL setup in the binding, only then can this control can be used to update the Image channel. |
-| `whiteLED`                  | Dimmer | RW | Turn the visible white LED ON or OFF and if supported dim from 0-100%. |
-| `zoom`                       | Dimmer | RW | Works with ONVIF cameras that can be moved. |
+| Channel                     | Type   | Read/Write | Description                                                                                                                                                                                                                                                                                                                        |
+|-----------------------------|--------|------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `activateAlarmOutput`       | Switch | RW         | Toggles a cameras relay output 1.                                                                                                                                                                                                                                                                                                  |
+| `activateAlarmOutput2`      | Switch | RW         | Toggles a cameras relay output 2.                                                                                                                                                                                                                                                                                                  |
+| `animalAlarm`               | Switch | RW         | Toggles when an animal is in view.                                                                                                                                                                                                                                                                                                 |
+| `audioAlarm`                | Switch | R          | When the camera detects noise above a threshold this switch will move to ON.                                                                                                                                                                                                                                                       |
+| `autoLED`                   | Switch | RW         | When ON this sets a cameras IR LED to automatically turn on or off.                                                                                                                                                                                                                                                                |
+| `autoTracking`              | Switch | RW         | Turn the automatic mode for tracking ON or OFF.                                                                                                                                                                                                                                                                                    |
+| `autoWhiteLED`              | Switch | RW         | When ON this sets a cameras visible white LED to automatically turn on or off.                                                                                                                                                                                                                                                     |
+| `carAlarm`                  | Switch | RW         | When a car is detected the switch will turn ON.                                                                                                                                                                                                                                                                                    |
+| `cellMotionAlarm`           | Switch | R          | ONVIF cameras only will reflect the status of the ONVIF event of the same name.                                                                                                                                                                                                                                                    |
+| `createSnapshots` | Switch | RW | This control can be used to manually start and stop using your openHAB CPU to create snapshots from a RTSP source with FFmpeg. |
+| `doorBell`                  | Switch | R          | Doorbird only, will reflect the status of the doorbell button.                                                                                                                                                                                                                                                                     |
+| `enableAudioAlarm`          | Switch | RW         | Allows the audio alarm to be turned ON or OFF.                                                                                                                                                                                                                                                                                     |
+| `enableEmail`               | Switch | RW         | Allows the email features to be turned ON or OFF.                                                                                                                                                                                                                                                                                  |
+| `enableExternalAlarmInput`  | Switch | RW         | Hikvision and Instar allow the Alarm input terminals to be disabled by this control.                                                                                                                                                                                                                                               |
+| `enableFieldDetectionAlarm` | Switch | RW         | Allows the field detection alarm to be turned ON or OFF. Some cameras will call this the Intrusion Alarm.                                                                                                                                                                                                                          |
+| `enableFTP`                 | Switch | RW         | Turn the cameras internal FTP recordings ON or OFF.                                                                                                                                                                                                                                                                                |
+| `enableLED`                 | Switch | RW         | Turn the IR LED ON or OFF. Some cameras have 3 states the LED can be in, so see the `autoLED` channel.                                                                                                                                                                                                                             |
+| `enableLineCrossingAlarm`   | Switch | RW         | Turns the line crossing alarm for API cameras, ON and OFF.                                                                                                                                                                                                                                                                         |
+| `enableMotionAlarm`         | Switch | RW         | Turns the motion alarm ON and OFF for API cameras. This will not effect FFmpeg based alarms which have their own control.                                                                                                                                                                                                          |
+| `enablePirAlarm`            | Switch | RW         | Turn PIR sensor ON or OFF.                                                                                                                                                                                                                                                                                                         |
+| `enablePush`                | Switch | RW         | Allows the push notification features to be turned ON or OFF.                                                                                                                                                                                                                                                                      |
+| `enableRecordings`          | Switch | RW         | Turn the cameras internal recordings ON or OFF.                                                                                                                                                                                                                                                                                    |
+| `externalAlarmInput`        | Switch | R          | Reflects the status of the alarm input terminals on some cameras.                                                                                                                                                                                                                                                                  |
+| `externalAlarmInput2`       | Switch | R          | Reflects the status of the alarm input 2 terminals on some cameras.                                                                                                                                                                                                                                                                |
+| `externalLight`             | Switch | RW         | Some cameras have a dedicated relay output for turning lights on and off with.                                                                                                                                                                                                                                                     |
+| `externalMotion`            | Switch | RW         | Can be used to inform the camera if it has motion in its view area. Handy if you own a PIR or any other kind of external sensor. If you use the autofps.mjpeg feature, this could increase the frame rate when a door that was closed is opened. Note: It will not be passed onto your camera and will not trigger any recordings. |
+| `faceDetected`              | Switch | R          | When a camera detects a face (API cameras only) this switch will move to ON.                                                                                                                                                                                                                                                       |
+| `fieldDetectionAlarm`       | Switch | R          | Reflects the cameras status for the field or intrusion alarm.                                                                                                                                                                                                                                                                      |
+| `ffmpegMotionAlarm`         | Switch | R          | The status of the FFmpeg based motion alarm.                                                                                                                                                                                                                                                                                       |
+| `ffmpegMotionControl`       | Dimmer | RW         | This control allows FFmpeg to detect movement from a RTSP or HTTP source and inform openHAB. The channel that will move is called `ffmpegMotionAlarm`.                                                                                                                                                                             |
+| `gifHistory`                | String | RW         | The 50 most recent filenames the binding has used unless reset.                                                                                                                                                                                                                                                                    |
+| `gifHistoryLength`          | Number | RW         | How many filenames are in the `gifHistory`.                                                                                                                                                                                                                                                                                        |
+| `gotoPreset`                | String | RW         | ONVIF cameras that can move only. Will cause the camera to move to a preset location.                                                                                                                                                                                                                                              |
+| `hlsUrl`                    | String | RW         | The URL for the ipcamera.m3u8 file.                                                                                                                                                                                                                                                                                                |
+| `humanAlarm`                | Switch | RW         | When a camera detects a human this switch will turn ON.                                                                                                                                                                                                                                                                            |
+| `imageUrl`                  | String | RW         | The URL for the ipcamera.jpg file.                                                                                                                                                                                                                                                                                                 |
+| `itemLeft`                  | Switch | R          | Will turn ON if an API camera detects an item has been left behind.                                                                                                                                                                                                                                                                |
+| `itemTaken`                 | Switch | R          | Will turn ON if an API camera detects an item has been stolen.                                                                                                                                                                                                                                                                     |
+| `lastMotionType`            | String | RW         | Cameras with multiple alarm types will update this with which alarm last detected motion, i.e. a lineCrossing, faceDetection or item stolen alarm. You can also use this to create a timestamp of when the last motion was detected by creating a rule when this channel changes.                                                  |
+| `lastEventData`             | String | RW         | Detailed information about the last smart alarm that can contain information like which Line number was crossed and in which direction. The channel `lastMotionType` will hold the name of the alarm that this data belongs to.                                                                                                    |
+| `lineCrossingAlarm`         | Switch | R          | Will turn on if the API camera detects motion has crossed a line.                                                                                                                                                                                                                                                                  |
+| `mjpegUrl`                  | String | RW         | The URL for the ipcamera.mjpeg stream.                                                                                                                                                                                                                                                                                             |
+| `motionAlarm`               | Switch | R          | The status of the 'video motion' events in ONVIF and API cameras. Also see `cellMotionAlarm` as these can give different results.                                                                                                                                                                                                  |
+| `mp4History`                | String | RW         | The 50 most recent filenames the binding has used unless reset.                                                                                                                                                                                                                                                                    |
+| `mp4HistoryLength`          | Number | RW         | How many filenames are in the `mp4History`. Setting this to 0 will clear the history.                                                                                                                                                                                                                                              |
+| `pan`                       | Dimmer | RW         | Works with ONVIF cameras that can be moved.                                                                                                                                                                                                                                                                                        |
+| `parkingAlarm`              | Switch | R          | When an API camera detects a car, this will turn ON.                                                                                                                                                                                                                                                                               |
+| `pirAlarm`                  | Switch | R          | When a camera with PIR ability detects motion, this turns ON.                                                                                                                                                                                                                                                                      |
+| `privacyMode`               | Switch | RW         | Enable or disable the Privacy Mode of newer Amcrest/Dahua cameras. The camera will move the lens way down and stop the stream.                                                                                                                                                                                                     |
+| `recordingGif`              | Number | R          | How many seconds recording to GIF for. 0 when file ready.                                                                                                                                                                                                                                                                          |
+| `recordingMp4`              | Number | R          | How many seconds recording to MP4 for. 0 when file ready.                                                                                                                                                                                                                                                                          |
+| `rtspUrl`                   | String | RW         | The URL for the cameras auto detected RTSP stream.                                                                                                                                                                                                                                                                                 |
+| `sceneChangeAlarm`          | Switch | R          | When an API camera detects the camera has moved, this turns ON.                                                                                                                                                                                                                                                                    |
+| `startStream`               | Switch | RW         | Starts the HLS files being created, if it not manually moved it will indicate if the files are being created on demand.                                                                                                                                                                                                            |
+| `storageAlarm`              | Switch | R          | When an ONVIF cameras storage is full and/or removed, this turns ON.                                                                                                                                                                                                                                                               |
+| `tamperAlarm`               | Switch | R          | When an ONVIF cameras tamper switch is tripped, this turns ON.                                                                                                                                                                                                                                                                     |
+| `textOverlay`               | String | RW         | Dahua, Instar and Hikvision can overlay any text you enter here over the video stream.                                                                                                                                                                                                                                             |
+| `thresholdAudioAlarm`       | Dimmer | RW         | This channel can be linked to a Switch and a Slider. The value of the slider is the value in dB that is detected as noise/alarm down from digital full scale. Higher values are more sensitive and will trigger the alarm with quieter / less noise.                                                                               |
+| `tilt`                      | Dimmer | RW         | Works with ONVIF cameras that can be moved.                                                                                                                                                                                                                                                                                        |
+| `triggerExternalAlarmInput` | Switch | RW         | Hikvision cameras can change if the alarm input terminal is ON when high or low. This can be used to manually cause an alarm input event to occur.                                                                                                                                                                                 |
+| `tooBlurryAlarm`            | Switch | R          | ONVIF cameras only will reflect the status of the ONVIF event of the same name.                                                                                                                                                                                                                                                    |
+| `tooBrightAlarm`            | Switch | R          | ONVIF cameras only will reflect the status of the ONVIF event of the same name.                                                                                                                                                                                                                                                    |
+| `tooDarkAlarm`              | Switch | R          | ONVIF cameras only will reflect the status of the ONVIF event of the same name.                                                                                                                                                                                                                                                    |
+| `pollImage`                 | Switch | RW         | This control can be used to start and stop updating the Image channel.                                                                                                    |
+| `whiteLED`                  | Dimmer | RW         | Turn the visible white LED ON or OFF and if supported dim from 0-100%.                                                                                                                                                                                                                                                             |
+| `zoom`                      | Dimmer | RW         | Works with ONVIF cameras that can be moved.                                                                                                                                                                                                                                                                                        |
+| `acceptedCardNumber`        | String | R          | This channel shows the last accepted access card number that opened the door. The channel doesn't show rejected/unauthorized cards.                                                                                                                                                                                                |
+| `unacceptedCardNumber`      | String | R          | This channel shows the last unaccepted access card number that was read.                                                                                                                                                                                                                                                           |
+| `doorUnlock`                | Switch | RW         | This channel could reflect door lock state and at the same time send commands to door lock. Note that under some conditions doorphone doesn't send "lock off" message, so it's better to add expiration timer to corresponding item.                                                                                               |
+| `doorContact`               | Contact | R         | Reflects door open/closed contact state.                                                                                                                                                                                                                                                                                           |
+| `exitButton`                | Switch | R          | Reflects exit button state. This could be used to check for exit button's long clicks/double clicks, so the button could control other gates connected to openHAB, or outdoor lights.                                                                                                                                              |
+| `exitButtonEnabled`         | Switch | RW         | This channel could be used to disable the exit button to provide additional security at night or when noone is home.                                                                                                                                                                                                               |
+| `motionDetectionLevel`      | Number | RW         | Controls camera's built-in motion detection sensitivity.                                                                                                                                                                                                                                                                           |
+| `magneticLockWarning`       | Switch | R          | This alarm will trigger if the door was opened while the lock is closed, signalling possible intrusion alarm.                                                                                                                                                                                                                      |
 
 ## Moving PTZ Cameras
 
@@ -378,10 +392,11 @@ There are a number of ways to use snapshots with this binding.
 
 - Use the cameras URL so it passes from the camera directly to your end device. ie a tablet.
 This is always the best option if it works.
+
 - Request a snapshot with the URL `http://openhabIP:8080/ipcamera/{cameraUID}/ipcamera.jpg`.
 The IP is for your openHAB server not the camera.
 If you find the snapshot is old, you can set the `gifPreroll` to a number above 0 and this forces the camera to keep updating the stored JPG in RAM.
-The ipcamera.jpg can also be cast, as most cameras can not directly cast their snapshots.
+The ipcamera.jpg can also be cast, as most cameras cannot directly cast their snapshots.
 - Use the `http://openHAB:8080/ipcamera/{cameraUID}/snapshots.mjpeg` to request a stream of snapshots to be delivered in MJPEG format.
 - Use the record GIF action and use a `gifPreroll` value > 0.
 This creates a number of snapshots in the FFmpeg output folder called snapshotXXX.jpg where XXX starts at 0 and increases each `pollTime`.
@@ -434,14 +449,15 @@ You can cast it which can be handy to show a moving picture that keeps repeating
 ## MJPEG Streams
 
 Cameras that have built in MJPEG abilities can stream to openHAB with the MJPEG format with next to no CPU load, less than 1 second lag, and FFmpeg does not need to be installed.
-Cameras without this ability can still use this binding to convert their RTSP H.264 format to MJPEG (keep reading for more on this below) and this will take a lot of CPU power to handle the conversion.
+Cameras without this ability can still use this binding to convert their RTSP H.264 format to MJPEG (keep reading for more on this below) and this may use a lot of CPU power to handle the conversion.
+The lower the resolution of the stream, the lower the CPU load, so consider using a substream of the camera in the `mjpegUrl` configuration field.
 The alternative is to use HLS format which does not need the conversion and does not use any CPU to speak of.
 For video without a delay, you need MJPEG and without a camera that can create it, you will need to use a lot of CPU power.
 This can be done in a dedicated video server which will be the only way with lots of cameras, unless you purchase cameras that have the ability built in.
 
-An alternative way to keep the CPU load low is to use the `snapshots.mjpeg` feature of the binding to create a stream from the cameras snapshots instead of the RTSP stream.
+An alternative way to keep the CPU load low is to use the `snapshots.mjpeg` or `autofps.mjpeg` feature of the binding to create a stream from the cameras snapshots instead of the RTSP stream.
 
-The main cameras that can do MJPEG with very low CPU load are Amcrest, Dahua, Hikvision, Foscam HD and Instar HD.
+The main cameras that can do MJPEG with very low CPU load are Amcrest, Dahua, ESP32 Camera, Hikvision, Foscam HD and Instar HD.
 To set this up, see [Special Notes for Different Brands](#special-notes-for-different-brands).
 The binding can then distribute this stream to many devices around your home whilst the camera only sees a single open stream.
 
@@ -589,7 +605,6 @@ Webview url="http://192.168.6.4:8080/static/html/file.html" height=5
         </div>
     </body>
 </html>
-
 ```
 
 ## How to Cast a Camera
@@ -687,6 +702,17 @@ then
 end
 ```
 
+## How To Reboot Camera
+
+```java
+rule "Reboot Camera At 12:00 AM"
+when
+    Time cron "0 0 0 ? *"
+then
+  getActions("ipcamera", "ipcamera:reolink:1a40bbe041").reboot()
+end
+```
+
 ## HABpanel
 
 This section is about how to get things working in HABpanel.
@@ -698,7 +724,7 @@ The widgets in the link above are the easiest way to get an advanced stream work
 
 ## Group Displays
 
-The `group` thing allows up to 4 cameras to be displayed like they are a single camera that rotates from one to the next.
+The `group` Thing allows up to 4 cameras to be displayed like they are a single camera that rotates from one to the next.
 The display order can be allowed to change if one or more of the cameras detects motion.
 
 Some additional checks to get it working are:

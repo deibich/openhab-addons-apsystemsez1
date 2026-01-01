@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2010-2024 Contributors to the openHAB project
+/*
+ * Copyright (c) 2010-2025 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -12,6 +12,7 @@
  */
 package org.openhab.binding.insteon.internal.device.database;
 
+import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -37,12 +38,19 @@ import org.slf4j.LoggerFactory;
  */
 @NonNullByDefault
 public class ModemDB {
+    /**
+     * List of known default controller groups with 0 being the standard one,
+     * while older third party software have used 254 or 255
+     */
+    private static final List<Integer> DEFAULT_CONTROLLER_GROUPS = List.of(0, 254, 255);
+
     private final Logger logger = LoggerFactory.getLogger(ModemDB.class);
 
-    private InsteonModem modem;
-    private Map<InsteonAddress, ModemDBEntry> dbes = new HashMap<>();
-    private List<ModemDBRecord> records = new ArrayList<>();
-    private List<ModemDBChange> changes = new ArrayList<>();
+    private final InsteonModem modem;
+    private final Map<InsteonAddress, ModemDBEntry> dbes = new HashMap<>();
+    private final List<ModemDBRecord> records = new ArrayList<>();
+    private final List<ModemDBChange> changes = new ArrayList<>();
+    private volatile int defaultControllerGroup = 0;
     private volatile boolean complete = false;
 
     public ModemDB(InsteonModem modem) {
@@ -51,6 +59,10 @@ public class ModemDB {
 
     public DatabaseManager getDatabaseManager() {
         return modem.getDBM();
+    }
+
+    public int getDefaultControllerGroup() {
+        return defaultControllerGroup;
     }
 
     public List<InsteonAddress> getDevices() {
@@ -71,9 +83,21 @@ public class ModemDB {
         }
     }
 
+    private ModemDBEntry getOrAddEntry(InsteonAddress address) {
+        synchronized (dbes) {
+            return Objects.requireNonNull(dbes.computeIfAbsent(address, a -> new ModemDBEntry(a, this)));
+        }
+    }
+
     public boolean hasEntry(InsteonAddress address) {
         synchronized (dbes) {
             return dbes.containsKey(address);
+        }
+    }
+
+    private void deleteEntry(InsteonAddress address) {
+        synchronized (dbes) {
+            dbes.remove(address);
         }
     }
 
@@ -81,6 +105,14 @@ public class ModemDB {
         synchronized (records) {
             return records.stream().toList();
         }
+    }
+
+    public byte[] getRecordDump() {
+        return getRecords().stream().distinct().map(ModemDBRecord::getBytes)
+                .flatMapToInt(bytes -> IntStream.range(0, bytes.length).map(i -> bytes[i]))
+                .collect(ByteArrayOutputStream::new, ByteArrayOutputStream::write,
+                        (out1, out2) -> out1.write(out2.toByteArray(), 0, out2.size()))
+                .toByteArray();
     }
 
     private Stream<ModemDBRecord> getRecords(@Nullable InsteonAddress address, @Nullable Integer group,
@@ -110,11 +142,11 @@ public class ModemDB {
     }
 
     private int getRecordIndex(InsteonAddress address, int group, boolean isController) {
-        return getRecords(address, group, isController).findFirst().map(this::getRecordIndex).orElse(-1);
+        return getRecords(address, group, isController).mapToInt(this::getRecordIndex).findFirst().orElse(-1);
     }
 
     private int getRecordIndex(InsteonAddress address, int group) {
-        return getRecords(address, group, null).findFirst().map(this::getRecordIndex).orElse(-1);
+        return getRecords(address, group, null).mapToInt(this::getRecordIndex).findFirst().orElse(-1);
     }
 
     public boolean hasRecord(@Nullable InsteonAddress address, @Nullable Integer group,
@@ -143,7 +175,7 @@ public class ModemDB {
     }
 
     private int getChangeIndex(InsteonAddress address, int group, boolean isController) {
-        return getChanges(address, group, isController).findFirst().map(this::getChangeIndex).orElse(-1);
+        return getChanges(address, group, isController).mapToInt(this::getChangeIndex).findFirst().orElse(-1);
     }
 
     public @Nullable ModemDBChange pollNextChange() {
@@ -192,7 +224,6 @@ public class ModemDB {
      * Loads the modem db
      */
     public void load() {
-        clear();
         getDatabaseManager().read(modem, 0L);
     }
 
@@ -214,10 +245,12 @@ public class ModemDB {
      */
     public void addRecord(ModemDBRecord record) {
         InsteonAddress address = record.getAddress();
-        ModemDBEntry dbe = getEntry(address);
-        if (dbe == null) {
-            dbe = new ModemDBEntry(address, this);
-            dbes.put(address, dbe);
+        ModemDBEntry dbe = getOrAddEntry(address);
+
+        int index = getRecordIndex(record);
+        if (index != -1) {
+            logger.trace("duplicate record: {}", record);
+            return;
         }
 
         synchronized (records) {
@@ -250,7 +283,7 @@ public class ModemDB {
         }
 
         if (!dbe.hasRecords()) {
-            dbes.remove(address);
+            deleteEntry(address);
         } else if (record.isController()) {
             dbe.removeControllerGroup(record.getGroup());
         } else if (record.isResponder()) {
@@ -382,7 +415,7 @@ public class ModemDB {
      *
      * @param change the change to add
      */
-    public void addChange(ModemDBChange change) {
+    private void addChange(ModemDBChange change) {
         ModemDBRecord record = change.getRecord();
         int index = getChangeIndex(record.getAddress(), record.getGroup(), record.isController());
         if (index == -1) {
@@ -488,11 +521,12 @@ public class ModemDB {
      */
     private void logEntries() {
         if (logger.isDebugEnabled()) {
-            if (getEntries().isEmpty()) {
+            List<ModemDBEntry> dbes = getEntries();
+            if (dbes.isEmpty()) {
                 logger.debug("modem database is empty");
             } else {
                 logger.debug("modem database has {} entries:", dbes.size());
-                getEntries().stream().map(String::valueOf).forEach(logger::debug);
+                dbes.stream().map(String::valueOf).forEach(logger::debug);
                 if (logger.isTraceEnabled()) {
                     logger.trace("---------------- start of modem link records ----------------");
                     getRecords().stream().map(String::valueOf).forEach(logger::trace);
@@ -540,7 +574,26 @@ public class ModemDB {
      */
     public void recordsLoaded() {
         logEntries();
-        setIsComplete(true);
+        setDefaultControllerGroup();
+    }
+
+    /**
+     * Sets the default controller group
+     */
+    private void setDefaultControllerGroup() {
+        int maxSize = 0;
+        int defaultControllerGroup = 0;
+        // Set the default controller group to the one with the most related devices
+        for (int group : DEFAULT_CONTROLLER_GROUPS) {
+            int size = getRelatedDevices(group).size();
+            if (size > maxSize) {
+                maxSize = size;
+                defaultControllerGroup = group;
+            }
+        }
+
+        logger.debug("set default controller group to {}", defaultControllerGroup);
+        this.defaultControllerGroup = defaultControllerGroup;
     }
 
     /**
@@ -560,23 +613,16 @@ public class ModemDB {
      * @param productData the product data to set
      */
     public void setProductData(InsteonAddress address, ProductData productData) {
-        ModemDBEntry dbe = getEntry(address);
-        if (dbe == null) {
-            dbe = new ModemDBEntry(address, this);
-            dbes.put(address, dbe);
-        }
-
+        ModemDBEntry dbe = getOrAddEntry(address);
         dbe.setProductData(productData);
-
         modem.databaseProductDataUpdated(address, productData);
-
         logger.trace("set product data for {} as {}", address, productData);
     }
 
     /**
-     * Returns a list of related devices for a given broadcast group
+     * Returns a list of related devices for a given group
      *
-     * @param group the broadcast group
+     * @param group the group
      * @return list of related device addresses
      */
     public List<InsteonAddress> getRelatedDevices(int group) {
@@ -591,7 +637,7 @@ public class ModemDB {
      */
     public List<Integer> getBroadcastGroups() {
         return getEntries().stream().map(ModemDBEntry::getControllerGroups).flatMap(List::stream).distinct()
-                .filter(InsteonScene::isValidGroup).toList();
+                .filter(this::isValidBroadcastGroup).toList();
     }
 
     /**
@@ -605,10 +651,20 @@ public class ModemDB {
     }
 
     /**
+     * Returns if a broadcast group is valid
+     *
+     * @param group the broadcast group
+     * @return true if the broadcast group number is valid and not the default controller group
+     */
+    public boolean isValidBroadcastGroup(int group) {
+        return InsteonScene.isValidGroup(group) && group != defaultControllerGroup;
+    }
+
+    /**
      * Returns the next available broadcast group
      */
     public int getNextAvailableBroadcastGroup() {
         return IntStream.range(InsteonScene.GROUP_NEW_MIN, InsteonScene.GROUP_NEW_MAX)
-                .filter(group -> !hasBroadcastGroup(group)).min().orElse(-1);
+                .filter(group -> isValidBroadcastGroup(group) && !hasBroadcastGroup(group)).min().orElse(-1);
     }
 }

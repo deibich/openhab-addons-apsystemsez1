@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2010-2024 Contributors to the openHAB project
+/*
+ * Copyright (c) 2010-2025 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -17,16 +17,18 @@ import java.lang.reflect.Type;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.util.StringContentProvider;
+import org.eclipse.jetty.http.HttpFields;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.http.HttpStatus;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
+import org.openhab.binding.tado.internal.handler.TadoHomeHandler;
 import org.openhab.binding.tado.swagger.codegen.api.ApiException;
-import org.openhab.binding.tado.swagger.codegen.api.auth.Authorizer;
 import org.openhab.binding.tado.swagger.codegen.api.model.GenericZoneCapabilities;
 import org.openhab.binding.tado.swagger.codegen.api.model.HomeInfo;
 import org.openhab.binding.tado.swagger.codegen.api.model.HomePresence;
@@ -47,17 +49,62 @@ import com.google.gson.reflect.TypeToken;
  * @author Andrew Fiddian-Green - Initial contribution
  */
 public class HomeApi {
-    private static final HttpClient CLIENT = new HttpClient(new SslContextFactory());
+    private static final HttpClient CLIENT = new HttpClient(new SslContextFactory.Client());
 
-    private String baseUrl = "https://my.tado.com/api/v2";
+    private String baseUrl;
     private int timeout = 5000;
 
     private Gson gson;
-    private Authorizer authorizer;
+    private OAuthorizerV2 authorizer;
+    private final TadoHomeHandler homeHandler;
 
-    public HomeApi(Gson gson, Authorizer authorizer) {
+    private void extractRateLimitInfo(ContentResponse response) {
+        int apiRateLimit = -1;
+        int apiRateDuration = -1;
+        int apiRateRemaining = -1;
+        int apiRateReset = -1;
+
+        HttpFields headersfields = response.getHeaders();
+
+        String rateLimitPolicyValueString = headersfields.get("RateLimit-Policy");
+        if (rateLimitPolicyValueString != null) {
+            String[] rateLimitPolicyValues = rateLimitPolicyValueString.split(";");
+            for (String value : rateLimitPolicyValues) {
+                if (value.startsWith("q=")) {
+                    apiRateLimit = safeParseInt(value.substring(2));
+                } else if (value.startsWith("w=")) {
+                    apiRateDuration = safeParseInt(value.substring(2));
+                }
+            }
+        }
+
+        String rateLimitValueString = headersfields.get("RateLimit");
+        if (rateLimitValueString != null) {
+            String[] rateLimitValues = rateLimitValueString.split(";");
+            for (String value : rateLimitValues) {
+                if (value.startsWith("r=")) {
+                    apiRateRemaining = safeParseInt(value.substring(2));
+                } else if (value.startsWith("w=")) { // some providers use 'w' as window/reset seconds
+                    apiRateReset = safeParseInt(value.substring(2));
+                }
+            }
+        }
+        homeHandler.updateRateLimitInfo(apiRateLimit, apiRateDuration, apiRateRemaining, apiRateReset);
+    }
+
+    private static int safeParseInt(String s) {
+        try {
+            return Integer.parseInt(s.trim());
+        } catch (NumberFormatException e) {
+            return 0;
+        }
+    }
+
+    public HomeApi(Gson gson, OAuthorizerV2 authorizer, String baseUrl, TadoHomeHandler homeHandler) {
         this.gson = gson;
         this.authorizer = authorizer;
+        this.baseUrl = baseUrl;
+        this.homeHandler = homeHandler;
     }
 
     public void deleteZoneOverlay(Long homeId, Long zoneId) throws IOException, ApiException {
@@ -96,6 +143,7 @@ public class HomeApi {
         }
 
         int statusCode = response.getStatus();
+        extractRateLimitInfo(response);
         if (statusCode >= HttpStatus.BAD_REQUEST_400) {
             throw new ApiException(response, "Operation deleteZoneOverlay failed with error " + statusCode);
         }
@@ -136,6 +184,7 @@ public class HomeApi {
 
         Type returnType = new TypeToken<HomeState>() {
         }.getType();
+        extractRateLimitInfo(response);
         return gson.fromJson(response.getContentAsString(), returnType);
     }
 
@@ -174,6 +223,7 @@ public class HomeApi {
 
         Type returnType = new TypeToken<List<MobileDevice>>() {
         }.getType();
+        extractRateLimitInfo(response);
         return gson.fromJson(response.getContentAsString(), returnType);
     }
 
@@ -212,6 +262,7 @@ public class HomeApi {
 
         Type returnType = new TypeToken<List<Zone>>() {
         }.getType();
+        extractRateLimitInfo(response);
         return gson.fromJson(response.getContentAsString(), returnType);
     }
 
@@ -250,6 +301,7 @@ public class HomeApi {
 
         Type returnType = new TypeToken<HomeInfo>() {
         }.getType();
+        extractRateLimitInfo(response);
         return gson.fromJson(response.getContentAsString(), returnType);
     }
 
@@ -283,6 +335,7 @@ public class HomeApi {
 
         Type returnType = new TypeToken<User>() {
         }.getType();
+        extractRateLimitInfo(response);
         return gson.fromJson(response.getContentAsString(), returnType);
     }
 
@@ -328,6 +381,7 @@ public class HomeApi {
 
         Type returnType = new TypeToken<GenericZoneCapabilities>() {
         }.getType();
+        extractRateLimitInfo(response);
         return gson.fromJson(response.getContentAsString(), returnType);
     }
 
@@ -373,6 +427,7 @@ public class HomeApi {
 
         Type returnType = new TypeToken<OverlayTemplate>() {
         }.getType();
+        extractRateLimitInfo(response);
         return gson.fromJson(response.getContentAsString(), returnType);
     }
 
@@ -418,6 +473,7 @@ public class HomeApi {
 
         Type returnType = new TypeToken<Zone>() {
         }.getType();
+        extractRateLimitInfo(response);
         return gson.fromJson(response.getContentAsString(), returnType);
     }
 
@@ -463,6 +519,7 @@ public class HomeApi {
 
         Type returnType = new TypeToken<Overlay>() {
         }.getType();
+        extractRateLimitInfo(response);
         return gson.fromJson(response.getContentAsString(), returnType);
     }
 
@@ -507,18 +564,17 @@ public class HomeApi {
 
         Type returnType = new TypeToken<ZoneState>() {
         }.getType();
+        extractRateLimitInfo(response);
         return gson.fromJson(response.getContentAsString(), returnType);
     }
 
-    public void updatePresenceLock(Long homeId, HomePresence json) throws IOException, ApiException {
+    /**
+     * If the {@link HomePresence} DTO is null we send an HTTP DELETE otherwise we send an HTTP PUT.
+     */
+    public void updatePresenceLock(Long homeId, HomePresence dto) throws IOException, ApiException {
         // verify the required parameter 'homeId' is set
         if (homeId == null) {
             throw new ApiException(400, "Missing the required parameter 'homeId' when calling updatePresenceLock");
-        }
-
-        // verify the required parameter 'json' is set
-        if (json == null) {
-            throw new ApiException(400, "Missing the required parameter 'json' when calling updatePresenceLock");
         }
 
         startHttpClient(CLIENT);
@@ -526,18 +582,20 @@ public class HomeApi {
         // create path and map variables
         String path = "/homes/{home_id}/presenceLock".replaceAll("\\{" + "home_id" + "\\}", homeId.toString());
 
-        Request request = CLIENT.newRequest(baseUrl + path).method(HttpMethod.PUT).timeout(timeout,
-                TimeUnit.MILLISECONDS);
+        Request request = CLIENT.newRequest(baseUrl + path).method(dto == null ? HttpMethod.DELETE : HttpMethod.PUT)
+                .timeout(timeout, TimeUnit.MILLISECONDS);
 
-        request.accept("application/json");
         request.header(HttpHeader.USER_AGENT, "openhab/swagger-java/1.0.0");
 
         if (authorizer != null) {
             authorizer.addAuthorization(request);
         }
 
-        String serializedBody = gson.toJson(json);
-        request.content(new StringContentProvider(serializedBody), "application/json");
+        if (dto != null) {
+            String serializedBody = gson.toJson(dto);
+            request.content(new StringContentProvider(serializedBody), "application/json");
+            request.accept("application/json");
+        }
 
         ContentResponse response;
         try {
@@ -547,6 +605,7 @@ public class HomeApi {
         }
 
         int statusCode = response.getStatus();
+        extractRateLimitInfo(response);
         if (statusCode >= HttpStatus.BAD_REQUEST_400) {
             throw new ApiException(response, "Operation updatePresenceLock failed with error " + statusCode);
         }
@@ -602,6 +661,7 @@ public class HomeApi {
 
         Type returnType = new TypeToken<Overlay>() {
         }.getType();
+        extractRateLimitInfo(response);
         return gson.fromJson(response.getContentAsString(), returnType);
     }
 
@@ -613,5 +673,9 @@ public class HomeApi {
                 // nothing we can do here
             }
         }
+    }
+
+    public @Nullable OAuthorizerV2 getAuthorizerV2() {
+        return authorizer instanceof OAuthorizerV2 v2 ? v2 : null;
     }
 }

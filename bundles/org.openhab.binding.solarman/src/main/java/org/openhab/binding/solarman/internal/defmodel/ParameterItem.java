@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2010-2024 Contributors to the openHAB project
+/*
+ * Copyright (c) 2010-2025 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -46,24 +46,33 @@ public class ParameterItem {
     private BigDecimal offset;
     @Nullable
     private Boolean isstr;
+    @Nullable
+    private Boolean isReadOnly;
+    private List<Lookup> lookup = new ArrayList<>();
 
     public ParameterItem() {
     }
 
     public ParameterItem(String name, @Nullable String itemClass, @Nullable String stateClass, @Nullable String uom,
             @Nullable BigDecimal scale, Integer rule, List<Integer> registers, @Nullable String icon,
-            @Nullable Validation validation, @Nullable BigDecimal offset, @Nullable Boolean isstr) {
+            @Nullable Validation validation, @Nullable BigDecimal offset, @Nullable Boolean isstr,
+            @Nullable Boolean isReadOnly, @Nullable List<Lookup> lookup) {
         this.name = name;
         this.itemClass = itemClass;
         this.stateClass = stateClass;
         this.uom = uom;
         this.scale = scale;
         this.rule = rule;
-        this.registers = registers;
+        this.registers = new ArrayList<>(registers);
+        this.registers.sort(Integer::compareTo);
         this.icon = icon;
         this.validation = validation;
         this.offset = offset;
         this.isstr = isstr;
+        this.isReadOnly = isReadOnly;
+        if (lookup != null) {
+            this.lookup = lookup;
+        }
     }
 
     public String getName() {
@@ -146,11 +155,31 @@ public class ParameterItem {
         this.isstr = isstr;
     }
 
+    public @Nullable Boolean getIsReadOnly() {
+        return isReadOnly;
+    }
+
+    public void setIsReadOnly(Boolean isReadOnly) {
+        this.isReadOnly = isReadOnly;
+    }
+
     public @Nullable String getItemClass() {
         return itemClass;
     }
 
     public void setItemClass(String itemClass) {
         this.itemClass = itemClass;
+    }
+
+    public List<Lookup> getLookup() {
+        return lookup;
+    }
+
+    public void setLookup(List<Lookup> lookup) {
+        this.lookup = lookup;
+    }
+
+    public Boolean hasLookup() {
+        return !lookup.isEmpty();
     }
 }

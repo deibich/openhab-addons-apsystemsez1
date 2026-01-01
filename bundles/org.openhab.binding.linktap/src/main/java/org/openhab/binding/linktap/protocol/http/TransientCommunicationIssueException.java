@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2010-2024 Contributors to the openHAB project
+/*
+ * Copyright (c) 2010-2025 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -28,7 +28,6 @@ public class TransientCommunicationIssueException extends I18Exception {
     private static final long serialVersionUID = -7786449325604143287L;
 
     public TransientCommunicationIssueException() {
-        super();
     }
 
     public TransientCommunicationIssueException(final String message, final String i18key) {
@@ -63,7 +62,12 @@ public class TransientCommunicationIssueException extends I18Exception {
         /**
          * COMMUNICATIONS_LOST
          */
-        COMMUNICATIONS_LOST("Communications Lost", "exception.communications-lost");
+        COMMUNICATIONS_LOST("Communications Lost", "exception.communications-lost"),
+
+        /**
+         * GATEWAY_BUSY
+         */
+        GATEWAY_BUSY("Gateway Busy", "exception.gateway-busy");
 
         private final String description;
         private final String i18Key;

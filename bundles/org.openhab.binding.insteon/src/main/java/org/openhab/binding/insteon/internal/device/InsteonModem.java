@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2010-2024 Contributors to the openHAB project
+/*
+ * Copyright (c) 2010-2025 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -12,7 +12,6 @@
  */
 package org.openhab.binding.insteon.internal.device;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -21,6 +20,7 @@ import java.util.concurrent.ScheduledExecutorService;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
+import org.eclipse.jetty.client.HttpClient;
 import org.openhab.binding.insteon.internal.config.InsteonBridgeConfiguration;
 import org.openhab.binding.insteon.internal.device.database.DatabaseManager;
 import org.openhab.binding.insteon.internal.device.database.ModemDB;
@@ -30,6 +30,7 @@ import org.openhab.binding.insteon.internal.transport.PortListener;
 import org.openhab.binding.insteon.internal.transport.message.FieldException;
 import org.openhab.binding.insteon.internal.transport.message.InvalidMessageTypeException;
 import org.openhab.binding.insteon.internal.transport.message.Msg;
+import org.openhab.binding.insteon.internal.utils.HexUtils;
 import org.openhab.core.io.transport.serial.SerialPortManager;
 
 /**
@@ -53,14 +54,14 @@ public class InsteonModem extends BaseDevice<InsteonAddress, InsteonBridgeHandle
     private boolean initialized = false;
     private int msgsReceived = 0;
 
-    public InsteonModem(InsteonBridgeConfiguration config, ScheduledExecutorService scheduler,
+    public InsteonModem(InsteonBridgeConfiguration config, HttpClient httpClient, ScheduledExecutorService scheduler,
             SerialPortManager serialPortManager) {
         super(InsteonAddress.UNKNOWN);
-        this.port = new Port(config, scheduler, serialPortManager);
+        this.port = new Port(config, httpClient, scheduler, serialPortManager);
         this.modemDB = new ModemDB(this);
         this.dbm = new DatabaseManager(this, scheduler);
         this.linker = new LinkManager(this, scheduler);
-        this.poller = new PollManager(scheduler);
+        this.poller = new PollManager(config.getDevicePollInterval(), scheduler);
         this.requester = new RequestManager(scheduler);
     }
 
@@ -182,7 +183,7 @@ public class InsteonModem extends BaseDevice<InsteonAddress, InsteonBridgeHandle
         return initialized;
     }
 
-    public void writeMessage(Msg msg) throws IOException {
+    public void writeMessage(Msg msg) {
         port.writeMessage(msg);
     }
 
@@ -194,9 +195,6 @@ public class InsteonModem extends BaseDevice<InsteonAddress, InsteonBridgeHandle
 
         port.registerListener(this);
 
-        poller.start();
-        requester.start();
-
         discover();
 
         return true;
@@ -204,20 +202,28 @@ public class InsteonModem extends BaseDevice<InsteonAddress, InsteonBridgeHandle
 
     public void disconnect() {
         logger.debug("disconnecting from modem");
-        if (linker.isRunning()) {
-            linker.stop();
-        }
-
-        dbm.stop();
-        port.stop();
         requester.stop();
         poller.stop();
+        linker.stop();
+        dbm.stop();
+        port.stop();
     }
 
     public boolean reconnect() {
         logger.debug("reconnecting to modem");
+        requester.stop();
+        poller.pause();
+        linker.stop();
+        dbm.stop();
         port.stop();
-        return port.start();
+
+        if (!port.start()) {
+            return false;
+        }
+
+        poller.resume();
+
+        return true;
     }
 
     private void discover() {
@@ -233,10 +239,8 @@ public class InsteonModem extends BaseDevice<InsteonAddress, InsteonBridgeHandle
         try {
             Msg msg = Msg.makeMessage("GetIMInfo");
             writeMessage(msg);
-        } catch (IOException e) {
-            logger.warn("error sending modem info query ", e);
         } catch (InvalidMessageTypeException e) {
-            logger.warn("invalid message ", e);
+            logger.warn("error creating message", e);
         }
     }
 
@@ -250,8 +254,8 @@ public class InsteonModem extends BaseDevice<InsteonAddress, InsteonBridgeHandle
 
         DeviceType deviceType = productData.getDeviceType();
         if (deviceType == null) {
-            logger.warn("unsupported product data for modem {} devCat:{} subCat:{}", address, deviceCategory,
-                    subCategory);
+            logger.warn("unsupported product data for modem {} devCat:{} subCat:{}", address,
+                    HexUtils.getHexString(deviceCategory), HexUtils.getHexString(subCategory));
             return;
         }
         setAddress(address);
@@ -269,9 +273,27 @@ public class InsteonModem extends BaseDevice<InsteonAddress, InsteonBridgeHandle
         }
     }
 
+    public void reset() {
+        try {
+            Msg msg = Msg.makeMessage("ResetIM");
+            writeMessage(msg);
+        } catch (InvalidMessageTypeException e) {
+            logger.warn("error creating message", e);
+        }
+    }
+
+    private void handleModemReset() {
+        logger.debug("modem reset initiated");
+
+        InsteonBridgeHandler handler = getHandler();
+        if (handler != null) {
+            handler.reset(RESET_TIME);
+        }
+    }
+
     public void logDeviceStatistics() {
         logger.debug("devices: {} configured, {} polling, msgs received: {}", getDevices().size(),
-                getPollManager().getSizeOfQueue(), msgsReceived);
+                getPollManager().getPollCount(), msgsReceived);
         msgsReceived = 0;
     }
 
@@ -316,6 +338,8 @@ public class InsteonModem extends BaseDevice<InsteonAddress, InsteonBridgeHandle
     public void databaseCompleted() {
         logger.debug("modem database completed");
 
+        poller.setDeviceCount(modemDB.getDevices().size());
+
         getDevices().forEach(Device::refresh);
         getScenes().forEach(Scene::refresh);
 
@@ -342,6 +366,8 @@ public class InsteonModem extends BaseDevice<InsteonAddress, InsteonBridgeHandle
             return;
         }
         logger.debug("modem database link updated for device {} group {} 2way {}", address, group, is2Way);
+
+        poller.setDeviceCount(modemDB.getDevices().size());
 
         InsteonDevice device = getInsteonDevice(address);
         if (device != null) {
@@ -380,18 +406,6 @@ public class InsteonModem extends BaseDevice<InsteonAddress, InsteonBridgeHandle
         InsteonBridgeHandler handler = getHandler();
         if (handler != null) {
             handler.modemDBProductDataUpdated(address, productData);
-        }
-    }
-
-    /**
-     * Notifies that the modem reset process has been initiated
-     */
-    public void resetInitiated() {
-        logger.debug("modem reset initiated");
-
-        InsteonBridgeHandler handler = getHandler();
-        if (handler != null) {
-            handler.reset(RESET_TIME);
         }
     }
 
@@ -447,9 +461,6 @@ public class InsteonModem extends BaseDevice<InsteonAddress, InsteonBridgeHandle
             if (address == null) {
                 return;
             }
-            if (msg.isX10()) {
-                lastX10Address = msg.isX10Address() ? (X10Address) address : null;
-            }
             long time = System.currentTimeMillis();
             Device device = getAddress().equals(address) ? this : getDevice(address);
             if (device != null) {
@@ -461,8 +472,12 @@ public class InsteonModem extends BaseDevice<InsteonAddress, InsteonBridgeHandle
     }
 
     private void handleIMMessage(Msg msg) throws FieldException {
-        if (msg.getCommand() == 0x60) {
+        if (msg.getCommand() == 0x60 && msg.isReplyAck()) {
+            // we got an im info reply ack
             handleModemInfo(msg);
+        } else if (msg.getCommand() == 0x55 || msg.getCommand() == 0x67 && msg.isReplyAck()) {
+            // we got a user reset detected message or im reset reply ack
+            handleModemReset();
         } else {
             handleMessage(msg);
         }
@@ -482,20 +497,19 @@ public class InsteonModem extends BaseDevice<InsteonAddress, InsteonBridgeHandle
     }
 
     private void handleX10Message(Msg msg) throws FieldException {
-        X10Address address = lastX10Address;
-        if (msg.isX10Address()) {
-            // store the x10 address to use with the next cmd
-            lastX10Address = msg.getX10Address();
-        } else if (address != null) {
+        X10Address address = msg.isX10Address() ? msg.getX10Address() : lastX10Address;
+        if (address != null) {
             handleMessage(address, msg);
-            lastX10Address = null;
+            // store the x10 address to use with the next cmd
+            lastX10Address = msg.isX10Address() ? address : null;
+
         }
     }
 
     private void handleMessage(DeviceAddress address, Msg msg) throws FieldException {
         Device device = getDevice(address);
         if (device == null) {
-            logger.debug("unknown device with address {}, dropping message", address);
+            logger.trace("unknown device with address {}, dropping message", address);
         } else if (msg.isReply()) {
             device.requestReplied(msg);
         } else {
@@ -509,13 +523,14 @@ public class InsteonModem extends BaseDevice<InsteonAddress, InsteonBridgeHandle
      *
      * @param handler the bridge handler
      * @param config the bridge config
+     * @param httpClient the http client
      * @param scheduler the scheduler service
      * @param serialPortManager the serial port manager
      * @return the newly created InsteonModem
      */
     public static InsteonModem makeModem(InsteonBridgeHandler handler, InsteonBridgeConfiguration config,
-            ScheduledExecutorService scheduler, SerialPortManager serialPortManager) {
-        InsteonModem modem = new InsteonModem(config, scheduler, serialPortManager);
+            HttpClient httpClient, ScheduledExecutorService scheduler, SerialPortManager serialPortManager) {
+        InsteonModem modem = new InsteonModem(config, httpClient, scheduler, serialPortManager);
         modem.setHandler(handler);
         return modem;
     }

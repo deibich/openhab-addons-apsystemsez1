@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2010-2024 Contributors to the openHAB project
+/*
+ * Copyright (c) 2010-2025 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -59,6 +59,13 @@ public interface InsteonThingHandler extends ThingHandler {
     public Map<String, String> getChannelsInfo();
 
     /**
+     * Returns if the thing status is online
+     *
+     * @return true if the thing status is online
+     */
+    public boolean isOnline();
+
+    /**
      * Updates a channel state
      *
      * @param channelUID the channel uid
@@ -91,4 +98,9 @@ public interface InsteonThingHandler extends ThingHandler {
      * Refreshes the thing
      */
     public void refresh();
+
+    /**
+     * Updates the thing status
+     */
+    public void updateStatus();
 }

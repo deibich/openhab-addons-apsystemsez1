@@ -1,19 +1,19 @@
 # Nest Binding
 
-The Nest binding integrates devices by [Nest](https://store.google.com/us/category/connected_home?) using the [Smart Device Management](https://developers.google.com/nest/device-access/api) (SDM) API.
+The Nest binding integrates devices by [Nest](https://store.google.com/category/connected_home) using the [Smart Device Management](https://developers.google.com/nest/device-access/api) (SDM) API.
 
-To be able to use the SDM API it is required to first [register](https://developers.google.com/nest/device-access/registration) and pay a US$5 non-refundable registration fee.
+To use the SDM API, you must first [register](https://developers.google.com/nest/device-access/registration) and pay a non-refundable US$5 registration fee.
 
-Because the SDM API runs on servers in the cloud, a connection with the Internet is required for sending and receiving information.
+Because the SDM API runs on servers in the cloud, an Internet connection is required for sending and receiving information.
 The binding uses HTTPS to connect to the APIs using port 443.
-So make sure outbound connections to these ports are not blocked by a firewall.
+Ensure outbound connections to this port are not blocked by a firewall.
 
 > Note: This binding no longer supports the Works with Nest (WWN) API because it has been discontinued by Google.
 See [Support for Works with Nest ending](https://support.google.com/googlenest/answer/9293712).
 
 ## Supported Things
 
-The table below lists the Nest binding thing types:
+The table below lists the Nest binding Thing types:
 
 | Things                                  | Description                                                            | Thing Type     |
 |-----------------------------------------|------------------------------------------------------------------------|----------------|
@@ -26,20 +26,20 @@ The table below lists the Nest binding thing types:
 The SDM API currently does not support Nest Protect devices.
 
 To use the Nest SDM API, add an Account Thing using the UI and configure the required parameters.
-After configuring an Account Thing, you can use it to discover the connected devices which are then added the Inbox.
+After configuring an Account Thing, you can use it to discover the connected devices, which are then added to the Inbox.
 
 ## Account Configuration
 
 ### Google Account Requirement
 
-To be able to use the SDM API it is required that you use a Google Account with your Nest devices.
+To use the SDM API you must use a Google Account with your Nest devices.
 To migrate to a Google account, follow the migration steps in the [Nest accounts FAQ](https://support.google.com/googlenest/answer/9297676?co=GENIE.Platform%3DiOS&hl=en&oco=0#accountmigration&accountmigration1&#accountmigration2&#accountmigration3&zippy=%2Chow-do-i-migrate-my-account)
 
 ### Configuration Parameters
 
 These parameters configure which SDM project is accessed using the SDM API and configure the OAuth 2.0 client details used for accessing the project.
 
-First a SDM project needs to be created and configured:
+First, an SDM project needs to be created and configured:
 
 1. Register for device access by clicking the "Go to Device Access Console" button and follow the instructions on the [Device Access Registration](https://developers.google.com/nest/device-access/registration) page.
 1. Create a new SDM project on the [Projects](https://console.nest.google.com/device-access/project-list) page
@@ -51,31 +51,31 @@ First a SDM project needs to be created and configured:
     1. After clicking the "Create project" button, the SDM project details of the created project show
 1. Copy and save the **Project ID** at the top of the page (e.g. `585de72e-968c-435c-b16a-31d1d3f76833`) somewhere
 
-Now an OAuth 2.0 client is created and configured for using the SDM API by the binding:
+Now create and configure an OAuth 2.0 client for the binding to use the SDM API:
 
-1. Configure the "Publishing status" of your Google Cloud Platform to "Production" ([APIs & Services > OAuth consent screen](https://console.cloud.google.com/apis/credentials/consent)) so the OAuth 2.0 tokens do not expire after 2 weeks
+1. Set the "Publishing status" of your Google Cloud Platform to "Production" ([APIs & Services > OAuth consent screen](https://console.cloud.google.com/apis/credentials/consent)) so the OAuth 2.0 tokens do not expire after 2 weeks
 1. Create a new client on the "Credentials" page ([APIs & Services > Credentials](https://console.cloud.google.com/apis/credentials)):
     1. Click the "Create Credentials" button at the top of the page
     1. Choose "OAuth client ID"
     1. As "Application type" choose "Web application"
     1. Give it a name so you can remember what it is used for (e.g. `Nest Binding SDM`)
-    1. Add "https://www.google.com" to the "Authorized redirect URIs"
+    1. Add "<https://www.google.com>" to the "Authorized redirect URIs"
     1. Click "Create" to create the client
-    1. Copy and save the generated **Client ID** (e.g. `1046297811237-3f5sj4ccfubit0fum027ral82jgffsd1.apps.googleusercontent.com`) and **Client Secret** (e.g. `726kcU-d1W4RXxEJA79oZ0oG`) somewhere
+    1. Copy and save the generated **Client ID** (e.g. `12345-abcde.apps.googleusercontent.com`) and **Client Secret** (e.g. `xyz-987`) somewhere
 1. Configure the SDM project to use the created client:
-    1. Go the the SDM [Projects](https://console.nest.google.com/device-access/project-list) page
+    1. Go to the SDM [Projects](https://console.nest.google.com/device-access/project-list) page
     1. Click on your SDM Project to show its details
     1. Scroll to "Project Info > OAuth client ID" and open the options menu (3 stacked dots) at the end of the line
     1. Select the "Edit" option
-    1. Copy/paste the saved OAuth 2.0 Client ID here (e.g. `1046297811237-3f5sj4ccfubit0fum027ral82jgffsd1.apps.googleusercontent.com`)
+    1. Copy/paste the saved OAuth 2.0 Client ID here (e.g. `12345-abcde.apps.googleusercontent.com`)
     1. Click the "Save" button at the end of the line to update the project
 
 Finally, an SDM Account Thing can be created to access the SDM project using the SDM API with the created client:
 
 1. Create a new "Nest SDM Account" Thing in openHAB
 1. Copy/paste the saved SDM **Project ID** to SDM group parameter in the SDM Account Thing configuration parameters (e.g. `585de72e-968c-435c-b16a-31d1d3f76833`)
-1. Copy/paste the saved OAuth 2.0 **Client ID** to SDM group parameter (e.g. `1046297811237-3f5sj4ccfubit0fum027ral82jgffsd1.apps.googleusercontent.com`)
-1. Copy/paste the saved OAuth 2.0 **Client Secret** to SDM group parameter (e.g. `726kcU-d1W4RXxEJA79oZ0oG`)
+1. Copy/paste the saved OAuth 2.0 **Client ID** to SDM group parameter (e.g. `12345-abcde.apps.googleusercontent.com`)
+1. Copy/paste the saved OAuth 2.0 **Client Secret** to SDM group parameter (e.g. `xyz-987`)
 1. Create an authorization code for the binding:
     1. Replace the **Project ID** and **Client ID** in the URL below with your SDM Project ID and SDM OAuth 2.0 Client ID and open the URL in a new browser tab:
 
@@ -83,7 +83,7 @@ Finally, an SDM Account Thing can be created to access the SDM project using the
 
        For the example values used so far this is:
 
-       `https://nestservices.google.com/partnerconnections/585de72e-968c-435c-b16a-31d1d3f76833/auth?scope=https://www.googleapis.com/auth/sdm.service&access_type=offline&prompt=consent&include_granted_scopes=true&response_type=code&redirect_uri=https://www.google.com&client_id=1046297811237-3f5sj4ccfubit0fum027ral82jgffsd1.apps.googleusercontent.com`
+       `https://nestservices.google.com/partnerconnections/585de72e-968c-435c-b16a-31d1d3f76833/auth?scope=https://www.googleapis.com/auth/sdm.service&access_type=offline&prompt=consent&include_granted_scopes=true&response_type=code&redirect_uri=https://www.google.com&client_id=12345-abcde.apps.googleusercontent.com`
     1. Enable all the permissions you want to use with the binding and click "Next" to continue
     1. Login using your Google account when prompted
     1. On the "Google hasn't verified this app" page, click on "Advanced"
@@ -95,17 +95,17 @@ Finally, an SDM Account Thing can be created to access the SDM project using the
 
 The SDM Account Thing should now be ONLINE and have as status description "Using periodic refresh".
 
-Next click the "Enable" button on the [Smart Device Management API](https://console.cloud.google.com/apis/library/smartdevicemanagement.googleapis.com) page for your GCP project to enable the SDM API.
+Next, click the "Enable" button on the [Smart Device Management API](https://console.cloud.google.com/apis/library/smartdevicemanagement.googleapis.com) page for your GCP project to enable the SDM API.
 
 Now it should also be possible to use the configured account to discover your Nest devices via the Inbox.
 
 You can monitor the SDM API using the Google Cloud Platform Console via [API & Services > Smart Device Management API](https://console.cloud.google.com/apis/api/smartdevicemanagement.googleapis.com/overview).
 
-If you've made it this far, it should be easy to edit the SDM Account Thing again and update it so it can also use SDM Pub/Sub events. :-)
+If you've made it this far, it should be easy to edit the SDM Account Thing again and update it so it can also use SDM Pub/Sub events.
 
 ### Pub/Sub Configuration Parameters
 
-After configuring the SDM configuration parameters, a SDM Account Thing can be updated so it can listen to SDM events using Pub/Sub.
+After configuring the SDM parameters, an SDM Account Thing can be updated so it can listen to SDM events using Pub/Sub.
 This is required if you want to download camera images using the binding or to get faster thermostat state updates.
 
 Enable Pub/Sub events in your SDM project:
@@ -117,11 +117,20 @@ Enable Pub/Sub events in your SDM project:
     1. Select the "Edit" option
     1. Check the "Enable events" option
     1. Click the "Save" button at the end of the line to update the project
+    1. Make a note of the **Pub/Sub topic** from the SDM configuration page
 
 Lookup your Google Cloud Platform (GCP) Project ID:
 
 1. Open the [IAM & Admin > Settings](https://console.cloud.google.com/iam-admin/settings)
 1. Copy and save the GCP **Project ID** (e.g. `openhab-12345`)
+
+Create a GCP Pub/Sub subscription in your GCP project:
+
+1. Open the [Subscriptions Page > Create](https://console.cloud.google.com/cloudpubsub/subscription/create)
+1. Select a unique name for the **Subscription ID** that uniquely identifies the Pub/Sub subscription used by the binding
+1. Select "Pull" as the Delivery Type
+1. Enter the **topic name** previously noted from the SDM project
+1. Click "Create" to create the subscription
 
 Next an OAuth 2.0 client is created which is used to create a Pub/Sub subscription for listening to SDM events by the binding:
 
@@ -130,19 +139,19 @@ Next an OAuth 2.0 client is created which is used to create a Pub/Sub subscripti
 1. Choose "OAuth client ID"
 1. As "Application type" choose "Web application"
 1. Give it a name so you can remember what it is used for (e.g. `Nest Binding Pub/Sub`)
-1. Add "https://www.google.com" to the "Authorized redirect URIs"
+1. Add "<https://www.google.com>" to the "Authorized redirect URIs"
 1. Click "Create" to create the client
-1. Copy and save the generated **Client ID** (e.g. `1046297811237-lg27h26kln6r1nbg54jpg6nfjg6h4b3n.apps.googleusercontent.com`) and **Client Secret** (e.g. `1-k78-XcHhp_gdZF-I6JaIHp`) somewhere
+1. Copy and save the generated **Client ID** (e.g. `67890-fghij.apps.googleusercontent.com`) and **Client Secret** (e.g. `uvw-654`) somewhere
 
 Finally, the existing SDM Account Thing can be updated so it can subscribe to SDM events:
 
 1. Open the configuration details of your existing "Nest SDM Account" Thing in openHAB
 1. Copy/paste the saved GCP **Project ID** to Pub/Sub group parameter (e.g. `openhab-123`)
-1. Enter a name in **Subscription ID** that uniquely identifies the Pub/Sub subscription used by the binding
+1. Enter the name of the previously chosen **Subscription ID** that uniquely identifies the Pub/Sub subscription used by the binding
 
    > Must be 3-255 characters, start with a letter, and contain only the following characters: letters, numbers, dashes (-), periods (.), underscores (_), tildes (~), percents (%) or plus signs (+). Cannot start with  goog.
-1. Copy/paste the saved OAuth 2.0 **Client ID** to Pub/Sub group parameter (e.g. `1046297811237-lg27h26kln6r1nbg54jpg6nfjg6h4b3n.apps.googleusercontent.com`)
-1. Copy/paste the saved OAuth 2.0 **Client Secret** to Pub/Sub group parameter (e.g. `1-k78-XcHhp_gdZF-I6JaIHp`)
+1. Copy/paste the saved OAuth 2.0 **Client ID** to Pub/Sub group parameter (e.g. `67890-fghij.apps.googleusercontent.com`)
+1. Copy/paste the saved OAuth 2.0 **Client Secret** to Pub/Sub group parameter (e.g. `uvw-654`)
 1. Create an authorization code for the binding:
     1. Replace the **Client ID** in the URL below with your Pub/Sub OAuth 2.0 Client ID and open the URL in a new browser tab:
 
@@ -150,7 +159,7 @@ Finally, the existing SDM Account Thing can be updated so it can subscribe to SD
 
        For the example client this is:
 
-       `https://accounts.google.com/o/oauth2/v2/auth?scope=https://www.googleapis.com/auth/pubsub&access_type=offline&prompt=consent&include_granted_scopes=true&response_type=code&redirect_uri=https://www.google.com&client_id=1046297811237-lg27h26kln6r1nbg54jpg6nfjg6h4b3n.apps.googleusercontent.com`
+       `https://accounts.google.com/o/oauth2/v2/auth?scope=https://www.googleapis.com/auth/pubsub&access_type=offline&prompt=consent&include_granted_scopes=true&response_type=code&redirect_uri=https://www.google.com&client_id=67890-fghij.apps.googleusercontent.com`
     1. Login using your Google account when prompted
     1. On the "Google hasn't verified this app" page, click on "Advanced"
     1. Then click on "Go to ... (advanced)"
@@ -159,7 +168,7 @@ Finally, the existing SDM Account Thing can be updated so it can subscribe to SD
     1. Copy/paste the **Authorization Code** to the Pub/Sub group parameter in the openHAB Nest SDM Account Thing configuration
 1. All required Pub/Sub Account Thing configuration parameters have now been entered so click "Save" to update the SDM Account Thing configuration
 
-The SDM Account Thing should now be ONLINE and have as status description "Using periodic refresh and Pub/Sub".
+The SDM Account Thing should now be ONLINE with status description "Using periodic refresh and Pub/Sub".
 
 The created subscription can also be monitored using the Google Cloud Platform Console via [Pub/Sub > Subscriptions](https://console.cloud.google.com/cloudpubsub/subscription/list).
 
@@ -229,12 +238,12 @@ Similarly, when a DateTime command is sent to the `fan_timer_timeout` channel, t
 
 ## Example
 
-You can use the discovery functionality of the binding to obtain the deviceId and structureId values for defining Nest things in files.
+You can use the discovery functionality of the binding to obtain the deviceId and structureId values for defining Nest Things in files.
 
 ### sdm-demo.things
 
 ```java
-Bridge nest:sdm_account:demo_sdm_account [ sdmProjectId="585de72e-968c-435c-b16a-31d1d3f76833", sdmClientId="1046297811237-3f5sj4ccfubit0fum027ral82jgffsd1.apps.googleusercontent.com", sdmClientSecret="726kcU-d1W4RXxEJA79oZ0oG", sdmAuthorizationCode="xkkY3qYtfZCzaXCcPxpOELUW8EhgiSMD3n9jmzJ3m0yerkQpVRdj5vqWRjMSIG", pubsubProjectId="openhab-12345", pubsubSubscriptionId="nest-sdm-events", pubsubClientId="1046297811237-lg27h26kln6r1nbg54jpg6nfjg6h4b3n.apps.googleusercontent.com", pubsubClientSecret="1-k78-XcHhp_gdZF-I6JaIHp", pubsubAuthorizationCode="tASfQq7gn6sfbUSbwRufbMI0BYDzh1d7MBG2G7vdZpbhjmZfwDp5MkeaX0iMxn" ] {
+Bridge nest:sdm_account:demo_sdm_account [ sdmProjectId="585de72e-968c-435c-b16a-31d1d3f76833", sdmClientId="12345-abcde.apps.googleusercontent.com", sdmClientSecret="xyz-987", sdmAuthorizationCode="xkkY3qYtfZCzaXCcPxpOELUW8EhgiSMD3n9jmzJ3m0yerkQpVRdj5vqWRjMSIG", pubsubProjectId="openhab-12345", pubsubSubscriptionId="nest-sdm-events", pubsubClientId="67890-fghij.apps.googleusercontent.com", pubsubClientSecret="uvw-654", pubsubAuthorizationCode="tASfQq7gn6sfbUSbwRufbMI0BYDzh1d7MBG2G7vdZpbhjmZfwDp5MkeaX0iMxn" ] {
     Thing sdm_camera       fish_cam          [ deviceId="AVPHwTQCAhersqmQ3IXwyqSX-XyuVZXoiNSNPeHdIMKgYpYZolNP4S9LS5QDF2LeuM3BQcpBh_fOEZYxkeH6eoQdWEELqi" ] {
         Channels:
             Image : motion_event#image [ imageHeight=1080 ]

@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2010-2024 Contributors to the openHAB project
+/*
+ * Copyright (c) 2010-2025 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -26,6 +26,7 @@ import org.openhab.binding.surepetcare.internal.dto.SurePetcareDevice;
 import org.openhab.binding.surepetcare.internal.dto.SurePetcareHousehold;
 import org.openhab.binding.surepetcare.internal.dto.SurePetcarePet;
 import org.openhab.binding.surepetcare.internal.dto.SurePetcarePetActivity;
+import org.openhab.binding.surepetcare.internal.dto.SurePetcarePetDrinking;
 import org.openhab.binding.surepetcare.internal.dto.SurePetcarePetFeeding;
 import org.openhab.binding.surepetcare.internal.dto.SurePetcareTag;
 import org.openhab.core.cache.ByteArrayFileCache;
@@ -35,7 +36,9 @@ import org.openhab.core.library.types.DecimalType;
 import org.openhab.core.library.types.QuantityType;
 import org.openhab.core.library.types.RawType;
 import org.openhab.core.library.types.StringType;
+import org.openhab.core.library.unit.MetricPrefix;
 import org.openhab.core.library.unit.SIUnits;
+import org.openhab.core.library.unit.Units;
 import org.openhab.core.thing.ChannelUID;
 import org.openhab.core.thing.Thing;
 import org.openhab.core.types.Command;
@@ -181,7 +184,7 @@ public class SurePetcarePetHandler extends SurePetcareBaseObjectHandler {
                 updateState(PET_CHANNEL_DATE_OF_BIRTH, pet.dateOfBirth == null ? UnDefType.UNDEF
                         : new DateTimeType(pet.dateOfBirth.atStartOfDay(ZoneId.systemDefault())));
                 updateState(PET_CHANNEL_WEIGHT,
-                        pet.weight == null ? UnDefType.UNDEF : new QuantityType<>(pet.weight, SIUnits.KILOGRAM));
+                        pet.weight == null ? UnDefType.UNDEF : new QuantityType<>(pet.weight, SIUnits.GRAM));
                 if (pet.tagId != null) {
                     SurePetcareTag tag = petcareAPI.getTag(pet.tagId.toString());
                     if (tag != null) {
@@ -209,6 +212,18 @@ public class SurePetcarePetHandler extends SurePetcareBaseObjectHandler {
                             }
                         }
                         updateState(PET_CHANNEL_FEEDER_LASTFEEDING, new DateTimeType(feeding.feedChangeAt));
+                    }
+                }
+                SurePetcarePetDrinking drinking = pet.status.drinking;
+                if (drinking != null) {
+                    SurePetcareDevice device = petcareAPI.getDevice(drinking.deviceId.toString());
+                    if (device != null) {
+                        updateState(PET_CHANNEL_WATER_DEVICE, new StringType(device.name));
+                        if (!drinking.drinkChange.isEmpty()) {
+                            updateState(PET_CHANNEL_WATER_LAST_CHANGE,
+                                    new QuantityType<>(drinking.drinkChange.get(0), MetricPrefix.MILLI(Units.LITRE)));
+                        }
+                        updateState(PET_CHANNEL_WATER_LAST_DRINKING, new DateTimeType(drinking.drinkChangeAt));
                     }
                 }
             } else {

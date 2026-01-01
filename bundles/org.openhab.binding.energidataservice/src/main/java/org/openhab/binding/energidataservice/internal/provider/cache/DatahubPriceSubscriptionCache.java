@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2010-2024 Contributors to the openHAB project
+/*
+ * Copyright (c) 2010-2025 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -45,13 +45,13 @@ public class DatahubPriceSubscriptionCache
     }
 
     public DatahubPriceSubscriptionCache(Clock clock) {
-        super(clock, MAX_CACHE_SIZE);
+        super(clock);
     }
 
     /**
      * Replace current "raw"/unprocessed tariff records in cache.
      * Map of hourly tariffs will be updated automatically.
-     * 
+     *
      * @param records The records as received from Energi Data Service.
      */
     @Override
@@ -78,7 +78,7 @@ public class DatahubPriceSubscriptionCache
 
     /**
      * Check if we have "raw" tariff records cached which are valid tomorrow.
-     * 
+     *
      * @return true if tariff records for tomorrow are cached
      */
     public boolean areTariffsValidTomorrow() {

@@ -20,7 +20,7 @@ You can connect it for example to a Raspberry Pi and use [ser2net Linux tool](ht
 
 ## Supported Things
 
-There is exactly one supported thing type, which represents the amplifier controller.
+There is exactly one supported Thing type, which represents the amplifier controller.
 It has the `amplifier` id.
 
 ## Discovery
@@ -39,7 +39,7 @@ The binding has the following configuration parameters:
 
 ## Thing Configuration
 
-The thing has the following configuration parameters:
+The Thing has the following configuration parameters:
 
 | Parameter Label          | Parameter ID   | Description                                                                                                                                     | Accepted values                                                                    |
 |--------------------------|--------------- |-------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------|
@@ -56,7 +56,7 @@ The thing has the following configuration parameters:
 
 Some notes:
 
-- If the port is set to 5006, the binding will adjust its protocol to connect to the Nuvo amplifier thing via an MPS4 IP connection.
+- If the port is set to 5006, the binding will adjust its protocol to connect to the Nuvo amplifier Thing via an MPS4 IP connection.
 - MPS4 connections do not support commands using `SxDISPINFO`& `SxDISPLINE` (display_lineN channels) including those outlined in the advanced rules section below. In this case,`SxDISPINFOTWO` and `SxDISPLINES` must be used instead. See the _very advanced_ rule examples below.
 - As of OH 3.4.0, the binding supports NuvoNet source communication for any/all of the amplifier's 6 inputs but only when using an MPS4 connection.
 - By implementing NuvoNet communication, the binding can now support sending custom menus, custom favorite lists, album art, etc. to the Nuvo keypads for each source configured as an openHAB NuvoNet source.
@@ -124,7 +124,7 @@ The following channels are available:
 
 ## Full Example
 
-nuvo.things:
+### `nuvo.things` Example
 
 ```java
 // serial port connection
@@ -138,7 +138,7 @@ nuvo:amplifier:myamp "Nuvo WHA" [ host="192.168.0.10", port=5006, numZones=6, cl
 
 ```
 
-nuvo.items:
+### `nuvo.items` Example
 
 ```java
 // system
@@ -160,7 +160,7 @@ Number nuvo_z1_bass "Bass Adjustment [%s]" { channel="nuvo:amplifier:myamp:zone1
 Number nuvo_z1_balance "Balance Adjustment [%s]" { channel="nuvo:amplifier:myamp:zone1#balance" }
 Switch nuvo_z1_loudness "Loudness" { channel="nuvo:amplifier:myamp:zone1#loudness" }
 Switch nuvo_z1_dnd "Do Not Disturb" { channel="nuvo:amplifier:myamp:zone1#dnd" }
-Switch nuvo_z1_lock "Zone Locked [%s]" { channel="nuvo:amplifier:myamp:zone1#lock" }
+Contact nuvo_z1_lock "Zone Locked [%s]" { channel="nuvo:amplifier:myamp:zone1#lock" }
 Switch nuvo_z1_party "Party Mode" { channel="nuvo:amplifier:myamp:zone1#party" }
 
 // > repeat for zones 2-20 (substitute z1 and zone1) < //
@@ -171,8 +171,8 @@ String nuvo_s1_display_line2 "Line 2: [%s]" { channel="nuvo:amplifier:myamp:sour
 String nuvo_s1_display_line3 "Line 3: [%s]" { channel="nuvo:amplifier:myamp:source1#display_line3" }
 String nuvo_s1_display_line4 "Line 4: [%s]" { channel="nuvo:amplifier:myamp:source1#display_line4" }
 String nuvo_s1_play_mode "Play Mode: [%s]" { channel="nuvo:amplifier:myamp:source1#play_mode" }
-Number:Time nuvo_s1_track_length "Track Length: [%d %unit%]" { channel="nuvo:amplifier:myamp:source1#track_length" }
-Number:Time nuvo_s1_track_position "Track Position: [%d %unit%]" { channel="nuvo:amplifier:myamp:source1#track_position" }
+Number:Time nuvo_s1_track_length "Track Length: [%s]" { channel="nuvo:amplifier:myamp:source1#track_length" }
+Number:Time nuvo_s1_track_position "Track Position: [%s]" { channel="nuvo:amplifier:myamp:source1#track_position" }
 String nuvo_s1_button_press "Button: [%s]" { channel="nuvo:amplifier:myamp:source1#button_press" }
 // String nuvo_s1_art_url "URL: [%s]" { channel="nuvo:amplifier:myamp:source1#art_url" }
 // Image nuvo_s1_album_art { channel="nuvo:amplifier:myamp:source1#album_art" }
@@ -183,8 +183,8 @@ String nuvo_s2_display_line2 "Line 2: [%s]" { channel="nuvo:amplifier:myamp:sour
 String nuvo_s2_display_line3 "Line 3: [%s]" { channel="nuvo:amplifier:myamp:source2#display_line3" }
 String nuvo_s2_display_line4 "Line 4: [%s]" { channel="nuvo:amplifier:myamp:source2#display_line4" }
 String nuvo_s2_play_mode "Play Mode: [%s]" { channel="nuvo:amplifier:myamp:source2#play_mode" }
-Number:Time nuvo_s2_track_length "Track Length: [%d %unit%]" { channel="nuvo:amplifier:myamp:source2#track_length" }
-Number:Time nuvo_s2_track_position "Track Position: [%d %unit%]" { channel="nuvo:amplifier:myamp:source2#track_position" }
+Number:Time nuvo_s2_track_length "Track Length: [%s]" { channel="nuvo:amplifier:myamp:source2#track_length" }
+Number:Time nuvo_s2_track_position "Track Position: [%s]" { channel="nuvo:amplifier:myamp:source2#track_position" }
 String nuvo_s2_button_press "Button: [%s]" { channel="nuvo:amplifier:myamp:source2#button_press" }
 // String nuvo_s2_art_url "URL: [%s]" { channel="nuvo:amplifier:myamp:source2#art_url" }
 // Image nuvo_s2_album_art { channel="nuvo:amplifier:myamp:source2#album_art" }
@@ -195,8 +195,8 @@ String nuvo_s3_display_line2 "Line 2: [%s]" { channel="nuvo:amplifier:myamp:sour
 String nuvo_s3_display_line3 "Line 3: [%s]" { channel="nuvo:amplifier:myamp:source3#display_line3" }
 String nuvo_s3_display_line4 "Line 4: [%s]" { channel="nuvo:amplifier:myamp:source3#display_line4" }
 String nuvo_s3_play_mode "Play Mode: [%s]" { channel="nuvo:amplifier:myamp:source3#play_mode" }
-Number:Time nuvo_s3_track_length "Track Length: [%d %unit%]" { channel="nuvo:amplifier:myamp:source3#track_length" }
-Number:Time nuvo_s3_track_position "Track Position: [%d %unit%]" { channel="nuvo:amplifier:myamp:source3#track_position" }
+Number:Time nuvo_s3_track_length "Track Length: [%s]" { channel="nuvo:amplifier:myamp:source3#track_length" }
+Number:Time nuvo_s3_track_position "Track Position: [%s]" { channel="nuvo:amplifier:myamp:source3#track_position" }
 String nuvo_s3_button_press "Button: [%s]" { channel="nuvo:amplifier:myamp:source3#button_press" }
 // String nuvo_s3_art_url "URL: [%s]" { channel="nuvo:amplifier:myamp:source3#art_url" }
 // Image nuvo_s3_album_art { channel="nuvo:amplifier:myamp:source3#album_art" }
@@ -207,8 +207,8 @@ String nuvo_s4_display_line2 "Line 2: [%s]" { channel="nuvo:amplifier:myamp:sour
 String nuvo_s4_display_line3 "Line 3: [%s]" { channel="nuvo:amplifier:myamp:source4#display_line3" }
 String nuvo_s4_display_line4 "Line 4: [%s]" { channel="nuvo:amplifier:myamp:source4#display_line4" }
 String nuvo_s4_play_mode "Play Mode: [%s]" { channel="nuvo:amplifier:myamp:source4#play_mode" }
-Number:Time nuvo_s4_track_length "Track Length: [%d %unit%]" { channel="nuvo:amplifier:myamp:source4#track_length" }
-Number:Time nuvo_s4_track_position "Track Position: [%d %unit%]" { channel="nuvo:amplifier:myamp:source4#track_position" }
+Number:Time nuvo_s4_track_length "Track Length: [%s]" { channel="nuvo:amplifier:myamp:source4#track_length" }
+Number:Time nuvo_s4_track_position "Track Position: [%s]" { channel="nuvo:amplifier:myamp:source4#track_position" }
 String nuvo_s4_button_press "Button: [%s]" { channel="nuvo:amplifier:myamp:source4#button_press" }
 // String nuvo_s4_art_url "URL: [%s]" { channel="nuvo:amplifier:myamp:source4#art_url" }
 // Image nuvo_s4_album_art { channel="nuvo:amplifier:myamp:source4#album_art" }
@@ -219,8 +219,8 @@ String nuvo_s5_display_line2 "Line 2: [%s]" { channel="nuvo:amplifier:myamp:sour
 String nuvo_s5_display_line3 "Line 3: [%s]" { channel="nuvo:amplifier:myamp:source5#display_line3" }
 String nuvo_s5_display_line4 "Line 4: [%s]" { channel="nuvo:amplifier:myamp:source5#display_line4" }
 String nuvo_s5_play_mode "Play Mode: [%s]" { channel="nuvo:amplifier:myamp:source5#play_mode" }
-Number:Time nuvo_s5_track_length "Track Length: [%d %unit%]" { channel="nuvo:amplifier:myamp:source5#track_length" }
-Number:Time nuvo_s5_track_position "Track Position: [%d %unit%]" { channel="nuvo:amplifier:myamp:source5#track_position" }
+Number:Time nuvo_s5_track_length "Track Length: [%s]" { channel="nuvo:amplifier:myamp:source5#track_length" }
+Number:Time nuvo_s5_track_position "Track Position: [%s]" { channel="nuvo:amplifier:myamp:source5#track_position" }
 String nuvo_s5_button_press "Button: [%s]" { channel="nuvo:amplifier:myamp:source5#button_press" }
 // String nuvo_s5_art_url "URL: [%s]" { channel="nuvo:amplifier:myamp:source5#art_url" }
 // Image nuvo_s5_album_art { channel="nuvo:amplifier:myamp:source5#album_art" }
@@ -231,8 +231,8 @@ String nuvo_s6_display_line2 "Line 2: [%s]" { channel="nuvo:amplifier:myamp:sour
 String nuvo_s6_display_line3 "Line 3: [%s]" { channel="nuvo:amplifier:myamp:source6#display_line3" }
 String nuvo_s6_display_line4 "Line 4: [%s]" { channel="nuvo:amplifier:myamp:source6#display_line4" }
 String nuvo_s6_play_mode "Play Mode: [%s]" { channel="nuvo:amplifier:myamp:source6#play_mode" }
-Number:Time nuvo_s6_track_length "Track Length: [%d %unit%]" { channel="nuvo:amplifier:myamp:source6#track_length" }
-Number:Time nuvo_s6_track_position "Track Position: [%d %unit%]" { channel="nuvo:amplifier:myamp:source6#track_position" }
+Number:Time nuvo_s6_track_length "Track Length: [%s]" { channel="nuvo:amplifier:myamp:source6#track_length" }
+Number:Time nuvo_s6_track_position "Track Position: [%s]" { channel="nuvo:amplifier:myamp:source6#track_position" }
 String nuvo_s6_button_press "Button: [%s]" { channel="nuvo:amplifier:myamp:source6#button_press" }
 // String nuvo_s6_art_url "URL: [%s]" { channel="nuvo:amplifier:myamp:source6#art_url" }
 // Image nuvo_s6_album_art { channel="nuvo:amplifier:myamp:source6#album_art" }
@@ -240,7 +240,7 @@ String nuvo_s6_button_press "Button: [%s]" { channel="nuvo:amplifier:myamp:sourc
 
 ```
 
-nuvo.sitemap:
+### `nuvo.sitemap` Example
 
 ```perl
 sitemap nuvo label="Audio Control" {
@@ -345,7 +345,7 @@ sitemap nuvo label="Audio Control" {
 
 ```
 
-nuvo.rules:
+### `nuvo.rules` Example
 
 ```java
 import java.text.Normalizer
@@ -504,7 +504,7 @@ Also if a menu item from a custom menu was selected, ie: `Top menu 1` on Zone 5,
 
 The functionality can be used to create very powerful rules as demontrated below. The following rule triggered from a menu item turns off all zones except for the zone that triggered the rule.
 
-nuvo-turn-off-all-but-caller.rules:
+#### `nuvo-turn-off-all-but-caller.rules` Example
 
 ```java
 rule "Turn off all zones except caller zone"
@@ -543,9 +543,9 @@ end
 The following are a set of example rules necessary to integrate metadata and control of another openHAB connected source (ie: Chromecast) into an openHAB NuvoNet source.
 By using these rules, it is possible to have artist, album and track names displayed on the keypad, transport button presses from the keypad relayed to the source, and album art displayed if using a Nuvo CTP-36 keypad.
 Global Favorites selection and Menu selections from the custom menus described above are also processed by these rules.
-The list of favorite names should be playable via another thing connected to openHAB and this thing should have a means to accept a text string that tells it to play a particular favorite/playlist.
+The list of favorite names should be playable via another Thing connected to openHAB and this Thing should have a means to accept a text string that tells it to play a particular favorite/playlist.
 
-nuvo-advanced.rules:
+#### `nuvo-advanced.rules.rules` Example
 
 ```java
 import java.text.Normalizer

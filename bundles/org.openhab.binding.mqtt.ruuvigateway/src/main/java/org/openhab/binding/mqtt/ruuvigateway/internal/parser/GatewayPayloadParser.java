@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2010-2024 Contributors to the openHAB project
+/*
+ * Copyright (c) 2010-2025 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -41,7 +41,7 @@ import fi.tkgwf.ruuvi.common.parser.impl.AnyDataFormatParser;
 @NonNullByDefault
 public class GatewayPayloadParser {
 
-    private static final Logger logger = LoggerFactory.getLogger(GatewayPayloadParser.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(GatewayPayloadParser.class);
     private static final Gson GSON = new GsonBuilder().create();
     private static final AnyDataFormatParser parser = new AnyDataFormatParser();
     private static final Predicate<String> HEX_PATTERN_CHECKER = Pattern.compile("^([0-9A-Fa-f]{2})+$")
@@ -80,19 +80,19 @@ public class GatewayPayloadParser {
         private GatewayPayload(GatewayPayloadIntermediate intermediate) throws IllegalArgumentException {
             String gwMac = intermediate.gw_mac;
             if (gwMac == null) {
-                logger.trace("Missing mandatory field 'gw_mac', ignoring");
+                LOGGER.trace("Missing mandatory field 'gw_mac', ignoring");
             }
             this.gwMac = Optional.ofNullable(gwMac);
             rssi = intermediate.rssi;
             try {
                 gwts = Optional.of(Instant.ofEpochSecond(intermediate.gwts));
             } catch (DateTimeException e) {
-                logger.debug("Field 'gwts' is a not valid time (epoch second), ignoring: {}", intermediate.gwts);
+                LOGGER.debug("Field 'gwts' is a not valid time (epoch second), ignoring: {}", intermediate.gwts);
             }
             try {
                 ts = Optional.of(Instant.ofEpochSecond(intermediate.ts));
             } catch (DateTimeException e) {
-                logger.debug("Field 'ts' is a not valid time (epoch second), ignoring: {}", intermediate.ts);
+                LOGGER.debug("Field 'ts' is a not valid time (epoch second), ignoring: {}", intermediate.ts);
             }
 
             String localData = intermediate.data;
@@ -101,7 +101,7 @@ public class GatewayPayloadParser {
             }
 
             if (!HEX_PATTERN_CHECKER.test(localData)) {
-                logger.debug(
+                LOGGER.debug(
                         "Data is not representing manufacturer specific bluetooth advertisement, it is not valid hex: {}",
                         localData);
                 throw new IllegalArgumentException(
@@ -109,23 +109,49 @@ public class GatewayPayloadParser {
                                 + localData);
             }
             byte[] bytes = HexUtils.hexToBytes(localData);
-            if (bytes.length < 6) {
-                // We want at least 6 bytes, ensuring bytes[5] is valid as well as Arrays.copyOfRange(bytes, 5, ...)
-                // below
-                // The payload length (might depend on format version ) is validated by parser.parse call
-                throw new IllegalArgumentException("Manufacturerer data is too short");
+            if (bytes.length < 4) {
+                // Minimum: [AD_Len] [0xFF Type] [Company_ID_LowByte] [Company_ID_HighByte]
+                throw new IllegalArgumentException("Advertisement data is too short");
             }
-            if ((bytes[4] & 0xff) != 0xff) {
-                logger.debug("Data is not representing manufacturer specific bluetooth advertisement: {}",
+
+            // Dynamically find the 0xFF (Manufacturer Specific Data) AD Type marker
+            // This handles advertisements with or without optional Flags AD structure
+            // Supports both classic (max 31 bytes per AD) and extended advertisements (max 255 bytes per AD)
+            // Format 5 typically: [02 01 06] [1B FF 99 04 05 ...] where 0xFF is at index 4
+            // Format E1 typically: [2B FF 99 04 E1 ...] where 0xFF is at index 1 (manufacturer-specific data AD
+            // structure with length 0x2B=43)
+            int manufacturerIndex = -1;
+            for (int i = 1; i < bytes.length; i++) {
+                if ((bytes[i] & 0xff) == 0xff) {
+                    // Found potential 0xFF AD Type marker
+                    // Verify previous byte looks like a valid AD Length (1-255 bytes for extended advertisements)
+                    if (bytes[i - 1] > 0) {
+                        // Verify we have enough data: type byte + company ID (2 bytes) + at least 1 data byte
+                        if (i + 3 <= bytes.length) {
+                            manufacturerIndex = i;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (manufacturerIndex < 0) {
+                LOGGER.debug("Data is not representing manufacturer specific bluetooth advertisement: {}",
                         HexUtils.bytesToHex(bytes));
                 throw new IllegalArgumentException(
                         "Data is not representing manufacturer specific bluetooth advertisement");
             }
-            // Manufacturer data starts after 0xFF byte, at index 5
-            byte[] manufacturerData = Arrays.copyOfRange(bytes, 5, bytes.length);
+
+            // Manufacturer data starts after 0xFF type byte (but includes company ID)
+            // Parser expects: [Company_ID_2bytes] [Data_Format] [Rest of data...]
+            // Example: [2B FF 99 04 E1 ...] where index 1 is 0xFF, so data starts at index 2 (99 04 E1...)
+            byte[] manufacturerData = Arrays.copyOfRange(bytes, manufacturerIndex + 1, bytes.length);
+            LOGGER.debug("Found 0xFF manufacturer type at index {}, extracting data from index {}: {}",
+                    manufacturerIndex, manufacturerIndex + 1, HexUtils.bytesToHex(manufacturerData));
             RuuviMeasurement localManufacturerData = parser.parse(manufacturerData);
             if (localManufacturerData == null) {
-                logger.trace("Manufacturer data is not valid: {}", HexUtils.bytesToHex(manufacturerData));
+                LOGGER.debug("Failed to parse manufacturer data: {}. Available parsers may not recognize this format.",
+                        HexUtils.bytesToHex(manufacturerData));
                 throw new IllegalArgumentException("Manufacturer data is not valid");
             }
             measurement = localManufacturerData;

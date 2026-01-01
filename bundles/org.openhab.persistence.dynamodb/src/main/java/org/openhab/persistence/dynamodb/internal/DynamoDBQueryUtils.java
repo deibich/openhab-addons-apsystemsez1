@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2010-2024 Contributors to the openHAB project
+/*
+ * Copyright (c) 2010-2025 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -44,19 +44,21 @@ public class DynamoDBQueryUtils {
      * @param dtoClass dto class
      * @param expectedTableSchema table schema to query against
      * @param item item corresponding to filter
+     * @param alias corresponding to item
      * @param filter filter for the query
      * @return DynamoDBQueryExpression corresponding to the given FilterCriteria
      * @param unitProvider the unit provider for number with dimension
      * @throws IllegalArgumentException when schema is not fully resolved
      */
     public static QueryEnhancedRequest createQueryExpression(Class<? extends DynamoDBItem<?>> dtoClass,
-            ExpectedTableSchema expectedTableSchema, Item item, FilterCriteria filter, UnitProvider unitProvider) {
+            ExpectedTableSchema expectedTableSchema, Item item, @Nullable String alias, FilterCriteria filter,
+            UnitProvider unitProvider) {
         if (!expectedTableSchema.isFullyResolved()) {
             throw new IllegalArgumentException("Schema not resolved");
         }
         QueryEnhancedRequest.Builder queryBuilder = QueryEnhancedRequest.builder()
                 .scanIndexForward(filter.getOrdering() == Ordering.ASCENDING);
-        String itemName = filter.getItemName();
+        String itemName = alias != null ? alias : filter.getItemName();
         if (itemName == null) {
             throw new IllegalArgumentException("Item name not set");
         }
@@ -140,7 +142,7 @@ public class DynamoDBQueryUtils {
                 return null;
             }
         });
-        if (filter.getOperator() != null && filter.getState() != null) {
+        if (filter.getState() != null) {
             // Convert filter's state to DynamoDBItem in order get suitable string representation for the state
             Expression.Builder stateFilterExpressionBuilder = Expression.builder()
                     .expression(String.format("#attr %s :value", operatorAsString(filter.getOperator())));
@@ -211,23 +213,10 @@ public class DynamoDBQueryUtils {
      * @return string representation corresponding to the given the Operator
      */
     private static String operatorAsString(Operator op) {
-        switch (op) {
-            case EQ:
-                return "=";
-            case NEQ:
-                return "<>";
-            case LT:
-                return "<";
-            case LTE:
-                return "<=";
-            case GT:
-                return ">";
-            case GTE:
-                return ">=";
-
-            default:
-                throw new IllegalStateException("Unknown operator " + op);
+        if (op == Operator.NEQ) {
+            return "<>";
         }
+        return op.getSymbol();
     }
 
     private static <T> void acceptAsDTO(Item item, boolean legacy, DynamoDBItemVisitor<T> visitor) {

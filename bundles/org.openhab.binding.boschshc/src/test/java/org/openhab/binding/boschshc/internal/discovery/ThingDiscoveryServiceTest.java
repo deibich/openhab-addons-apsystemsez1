@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2010-2024 Contributors to the openHAB project
+/*
+ * Copyright (c) 2010-2025 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -46,6 +46,7 @@ import org.openhab.core.config.discovery.DiscoveryResult;
 import org.openhab.core.config.discovery.DiscoveryService;
 import org.openhab.core.thing.Bridge;
 import org.openhab.core.thing.ThingUID;
+import org.openhab.core.util.SameThreadExecutorService;
 
 /**
  * Unit tests for {@link ThingDiscoveryService}.
@@ -65,7 +66,7 @@ class ThingDiscoveryServiceTest {
 
     @BeforeEach
     void beforeEach() {
-        fixture = new ThingDiscoveryService();
+        fixture = new ThingDiscoveryService(new SameThreadExecutorService());
         fixture.addDiscoveryListener(discoveryListener);
         fixture.setThingHandler(bridgeHandler);
     }
@@ -194,7 +195,8 @@ class ThingDiscoveryServiceTest {
         assertThat(result.getThingUID().getId(), is("testDevice_ID"));
         assertThat(result.getBridgeUID().getId(), is("testSHC"));
         assertThat(result.getLabel(), is("Test Name"));
-        assertThat(String.valueOf(result.getProperties().get("Location")), is("TestRoom"));
+        assertThat(String.valueOf(result.getProperties().get(BoschSHCBindingConstants.PROPERTY_LOCATION)),
+                is("TestRoom"));
     }
 
     @Test

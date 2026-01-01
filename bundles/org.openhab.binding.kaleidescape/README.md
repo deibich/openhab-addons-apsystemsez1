@@ -10,13 +10,14 @@ See [Kaleidescape-System-Control-Protocol-Reference-Manual.pdf](https://support.
 ## Supported Things
 
 All movie player components including the original K-Player series, M Class Players, Cinema One, Alto, and Strato are supported.
-It is important to choose the correct thing type to ensure the available channels are correct for the component being used.
+It is important to choose the correct Thing type to ensure the available channels are correct for the component being used.
 
-The supported thing types are:
-`player` Any KPlayer, M Class [M300, M500, M700] or Cinema One 1st Gen player
-`cinemaone` Cinema One (2nd Gen)
-`alto`
-`strato` Includes Strato, Strato S, Strato C or Strato V
+The supported Thing types are:
+
+- `player` Any KPlayer, M Class [M300, M500, M700] or Cinema One 1st Gen player
+- `cinemaone` Cinema One (2nd Gen)
+- `alto`
+- `strato` Includes Strato, Strato S, Strato C, Strato V or Strato M
 
 The binding supports either a TCP/IP connection or direct serial port connection (19200-8-N-1) to the Kaleidescape component.
 
@@ -24,22 +25,22 @@ The binding supports either a TCP/IP connection or direct serial port connection
 
 Auto-discovery is supported for Alto and Strato components if the device can be located on the local network using SDDP.
 Manually initiated discovery will locate all legacy Premiere line components if they are on the same IP subnet of the openHAB server.
-In the Inbox, select Search For Things and then choose the Kaleidescape Binding to initiate a discovery scan.
+In the Inbox, select Search for Things and then choose the Kaleidescape Binding to initiate a discovery scan.
 
 ## Thing Configuration
 
-The thing has the following configuration parameters:
+The Thing has the following configuration parameters:
 
 | Parameter Label                   | Parameter ID           | Description                                                                                                                             | Accepted values                                      |
 |-----------------------------------|------------------------|-----------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------|
 | Address                           | host                   | Host name or IP address of the Kaleidescape component                                                                                   | A host name or IP address                            |
 | Port                              | port                   | Communication port of the IP connection                                                                                                 | 10000 (default - should not need to change)          |
-| Serial Port                       | serialPort             | Serial port for connecting directly a component                                                                                         | Serial port name (optional)                          |
+| Serial Port                       | serialPort             | Serial port for connecting directly to a component                                                                                       | Serial port name (optional)                          |
 | Update Period                     | updatePeriod           | Tells the component how often time status updates should be sent (see notes below)                                                      | 0 or 1 are the currently accepted values (default 0) |
 | Advanced Volume Control Enabled   | volumeEnabled          | Enable the volume and mute controls in the K iPad & phone apps; when enabled the volume and mute channels described below are active    | Boolean (default false)                              |
 | Initial Volume Setting            | initialVolume          | Initial volume level set when the binding starts up                                                                                     | 0 to 75 (default 25)                                 |
 | Basic Volume Control Enabled      | volumeBasicEnabled     | Enables stateless volume up/down and mute controls in the K apps; cannot be used when `volumeEnabled` is true (see rules example below) | Boolean (default false)                              |
-| Load Highlighted Details          | loadHighlightedDetails | When enabled the binding will automatically load the the metadata channels when the selected item in the UI (Movie or Album) changes    | Boolean (default false)                              |
+| Load Highlighted Details          | loadHighlightedDetails | When enabled the binding will automatically load the metadata channels when the selected item in the UI (Movie or Album) changes        | Boolean (default false)                              |
 | Load Album Details                | loadAlbumDetails       | When enabled the binding will automatically load the metadata channels for the currently playing Album                                  | Boolean (default false) N/A for Alto and Strato      |
 
 Some notes:
@@ -99,7 +100,7 @@ The following channels are available:
 | ui#user_input              | String      | Indicates if the user is being prompted for input, what type of input, and any currently entered characters                     |
 | ui#user_input_prompt       | String      | Indicates user input prompt info and properties currently shown on screen                                                       |
 | ui#sendcmd                 | String      | Sends a raw command to the Kaleidescape player (WriteOnly)                                                                      |
-| -- music channels (not available on Alto and Strato) --                                                                                                                    |
+| -- music channels (not available on Alto and Strato) --                                                                                                                    |||
 | music#control              | Player      | Control Music Playback e.g. play/pause/next/previous/ffward/rewind                                                              |
 | music#repeat               | Switch      | Controls repeat playback for music                                                                                              |
 | music#random               | Switch      | Controls random playback for music                                                                                              |
@@ -115,7 +116,7 @@ The following channels are available:
 | music#track_handle         | String      | The handle of the currently playing track                                                                                       |
 | music#album_handle         | String      | The handle of the currently playing album                                                                                       |
 | music#nowplay_handle       | String      | The handle of the current now playing list                                                                                      |
-| -- metadata display channels (music related channels not available on Alto and Strato) --                                                                                  |
+| -- metadata display channels (music related channels not available on Alto and Strato) --                                                                                  |||
 | detail#type                | String      | Indicates if the currently selected item is a Movie or Album                                                                    |
 | detail#title               | String      | The title of the selected movie                                                                                                 |
 | detail#album_title         | String      | The title of the selected album                                                                                                 |
@@ -129,7 +130,7 @@ The following channels are available:
 | detail#artist              | String      | The artist of the selected album                                                                                                |
 | detail#directors           | String      | A list of directors of the selected movie                                                                                       |
 | detail#genres              | String      | A list of genres of the selected item                                                                                           |
-| detail#rating_reason       | String      | An explaination of why the selected movie received its rating                                                                   |
+| detail#rating_reason       | String      | An explanation of why the selected movie received its rating                                                                    |
 | detail#synopsis            | String      | A synopsis of the selected movie                                                                                                |
 | detail#review              | String      | A review of the selected album                                                                                                  |
 | detail#color_description   | String      | Indicates if the selected movie is in Color, Black and White, etc.                                                              |
@@ -139,7 +140,7 @@ The following channels are available:
 
 ## Full Example
 
-kaleidescape.things:
+### `kaleidescape.things` Example
 
 ```java
 kaleidescape:strato:myzone1 "Strato Theater Rm" [ host="192.168.1.10", updatePeriod=0, loadHighlightedDetails=true ]
@@ -147,7 +148,7 @@ kaleidescape:player:myzone2 "M500 Living Rm" [ host="192.168.1.11", updatePeriod
 kaleidescape:cinemaone:myzone3 "My Cinema One" [ host="192.168.1.12", updatePeriod=0, loadHighlightedDetails=true, loadAlbumDetails=true ]
 ```
 
-kaleidescape.items:
+### `kaleidescape.items` Example
 
 ```java
 // Virtual switch to send a command, see sitemap and rules below
@@ -162,12 +163,12 @@ String z1_Ui_TitleName "Movie Title: [%s]" { channel="kaleidescape:player:myzone
 String z1_Ui_PlayMode "Play Mode: [%s]" { channel="kaleidescape:player:myzone1:ui#play_mode" }
 String z1_Ui_PlaySpeed "Play Speed: [%s]" { channel="kaleidescape:player:myzone1:ui#play_speed" }
 Number z1_Ui_TitleNum "Title Number: [%s]" { channel="kaleidescape:player:myzone1:ui#title_num" }
-Number:Time z1_Ui_TitleLength "Title Length: [JS(ksecondsformat.js):%s]" { channel="kaleidescape:player:myzone1:ui#title_length" }
-Number:Time z1_Ui_TitleLoc "Title Location: [JS(ksecondsformat.js):%s]" { channel="kaleidescape:player:myzone1:ui#title_loc" }
+Number:Time z1_Ui_TitleLength "Title Length: [%s]" { channel="kaleidescape:player:myzone1:ui#title_length" }
+Number:Time z1_Ui_TitleLoc "Title Location: [%s]" { channel="kaleidescape:player:myzone1:ui#title_loc" }
 DateTime z1_Ui_TitleEndTime "Title End Time: [%s]" { channel="kaleidescape:player:myzone1:ui#endtime" }
 Number z1_Ui_ChapterNum "Chapter Number: [%s]" { channel="kaleidescape:player:myzone1:ui#chapter_num" }
-Number:Time z1_Ui_ChapterLength "Chapter Length: [JS(ksecondsformat.js):%s]" { channel="kaleidescape:player:myzone1:ui#chapter_length" }
-Number:Time z1_Ui_ChapterLoc "Chapter Location: [JS(ksecondsformat.js):%s]" { channel="kaleidescape:player:myzone1:ui#chapter_loc" }
+Number:Time z1_Ui_ChapterLength "Chapter Length: [%s]" { channel="kaleidescape:player:myzone1:ui#chapter_length" }
+Number:Time z1_Ui_ChapterLoc "Chapter Location: [%s]" { channel="kaleidescape:player:myzone1:ui#chapter_loc" }
 String z1_Ui_MovieMediaType "Media Type: [%s]" { channel="kaleidescape:player:myzone1:ui#movie_media_type" }
 String z1_Ui_MovieLocation "Movie Location: [%s]" { channel="kaleidescape:player:myzone1:ui#movie_location" }
 String z1_Ui_AspectRatio "Aspect Ratio: [%s]" { channel="kaleidescape:player:myzone1:ui#aspect_ratio" }
@@ -203,15 +204,15 @@ String z1_Music_Artist "Artist: [%s]" { channel="kaleidescape:player:myzone1:mus
 String z1_Music_Album "Album: [%s]" { channel="kaleidescape:player:myzone1:music#album" }
 String z1_Music_PlayMode "Play Mode: [%s]" { channel="kaleidescape:player:myzone1:music#play_mode" }
 String z1_Music_PlaySpeed "Play Speed: [%s]" { channel="kaleidescape:player:myzone1:music#play_speed" }
-Number:Time z1_Music_TrackLength "Track Length: [JS(ksecondsformat.js):%s]" { channel="kaleidescape:player:myzone1:music#track_length" }
-Number:Time z1_Music_TrackPosition "Track Position: [JS(ksecondsformat.js):%s]" { channel="kaleidescape:player:myzone1:music#track_position" }
+Number:Time z1_Music_TrackLength "Track Length: [%s]" { channel="kaleidescape:player:myzone1:music#track_length" }
+Number:Time z1_Music_TrackPosition "Track Position: [%s]" { channel="kaleidescape:player:myzone1:music#track_position" }
 Number z1_Music_TrackProgress "Track Progress: [%s %%]" { channel="kaleidescape:player:myzone1:music#track_progress" }
 String z1_Music_Title "Music Title Raw: [%s]" { channel="kaleidescape:player:myzone1:music#title" }
 String z1_Music_TrackHandle "Track Handle: [%s]" { channel="kaleidescape:player:myzone1:music#track_handle" }
 String z1_Music_AlbumHandle "Album Handle: [%s]" { channel="kaleidescape:player:myzone1:music#album_handle" }
 String z1_Music_NowplayHandle "Now Playing Handle: [%s]" { channel="kaleidescape:player:myzone1:music#nowplay_handle" }
 
-// Metatdata Display Channels (Album Title, Artist & Review are not available on Alto or Strato)
+// Metadata Display Channels (Album Title, Artist & Review are not available on Alto or Strato)
 String z1_Detail_Type "Metadata type: [%s]" { channel="kaleidescape:player:myzone1:detail#type" }
 String z1_Detail_Title "Title: [%s]" { channel="kaleidescape:player:myzone1:detail#title" }
 String z1_Detail_AlbumTitle "Album: [%s]" { channel="kaleidescape:player:myzone1:detail#album_title" }
@@ -220,7 +221,7 @@ String z1_Detail_CoverUrl "[%s]" { channel="kaleidescape:player:myzone1:detail#c
 String z1_Detail_HiresCoverUrl "[%s]" { channel="kaleidescape:player:myzone1:detail#hires_cover_url" }
 String z1_Detail_Rating "Rating: [%s]" { channel="kaleidescape:player:myzone1:detail#rating" }
 String z1_Detail_Year "Year: [%s]" { channel="kaleidescape:player:myzone1:detail#year" }
-Number:Time z1_Detail_RunningTime "Running Time: [JS(ksecondsformat.js):%s]" { channel="kaleidescape:player:myzone1:detail#running_time" }
+Number:Time z1_Detail_RunningTime "Running Time: [%s]" { channel="kaleidescape:player:myzone1:detail#running_time" }
 String z1_Detail_Actors "Actors: [%s]" { channel="kaleidescape:player:myzone1:detail#actors" }
 String z1_Detail_Directors "Directors: [%s]" { channel="kaleidescape:player:myzone1:detail#directors" }
 String z1_Detail_Artist "Artist: [%s]" { channel="kaleidescape:player:myzone1:detail#artist" }
@@ -235,31 +236,7 @@ String z1_Detail_DiscLocation "Disc Location: [%s]" { channel="kaleidescape:play
 String z1_MovieSearch "Movie Search"
 ```
 
-ksecondsformat.js:
-
-```javascript
-(function(timestamp) {
-    var totalSeconds = Date.parse(timestamp) / 1000
-
-    if (isNaN(totalSeconds)) {
-        return '-';
-    } else {
-        hours = Math.floor(totalSeconds / 3600);
-        totalSeconds %= 3600;
-        minutes = Math.floor(totalSeconds / 60);
-        seconds = totalSeconds % 60;
-        if ( minutes < 10 ) {
-            minutes = '0' + minutes;
-        }
-        if ( seconds < 10 ) {
-            seconds = '0' + seconds;
-        }
-        return hours + ':' + minutes + ':' + seconds;
-    }
-})(input)
-```
-
-kaleidescape.sitemap:
+### `kaleidescape.sitemap` Example
 
 ```perl
 sitemap kaleidescape label="Kaleidescape" {
@@ -349,7 +326,7 @@ sitemap kaleidescape label="Kaleidescape" {
 }
 ```
 
-kaleidescape.rules:
+### `kaleidescape.rules` Example
 
 ```java
 var int lightPercent
@@ -378,16 +355,16 @@ when
 then
     var volEvt = newState.toString()
 
-    // When `volumeBasicEnabled` is true for the thing, VOLUME_UP, VOLUME_DOWN and TOGGLE_MUTE are received from the iPad and phone apps
+    // When `volumeBasicEnabled` is true for the Thing, VOLUME_UP, VOLUME_DOWN and TOGGLE_MUTE are received from the iPad and phone apps
     // VOLUME_UP_PRESS/RELEASE, VOLUME_DOWN_PRESS/RELEASE, TOGGLE_MUTE events will always be received from the IR remote
     // *RELEASE events are not used in this example
 
     if (volEvt == "VOLUME_UP" || volEvt == "VOLUME_UP_PRESS") {
-        logInfo("k rules", "Volumne Up received")
+        logInfo("k rules", "Volume Up received")
     }
 
     if (volEvt == "VOLUME_DOWN" || volEvt == "VOLUME_DOWN_PRESS") {
-        logInfo("k rules", "Volumne Down received")
+        logInfo("k rules", "Volume Down received")
     }
 
     if (volEvt == "TOGGLE_MUTE") {
@@ -402,7 +379,7 @@ when
     Item z1_Ui_UserDefinedEvent received update
 then
     if (z1_Ui_UserDefinedEvent.state.toString == "DO_THE_NEEDFUL") {
-        logInfo("k rules", "handing the NEEDFUL script command...")
+        logInfo("k rules", "handling the NEEDFUL script command...")
     }
 end
 
@@ -458,7 +435,7 @@ then
     }
 end
 
-// The following are no longer required since the thing configuration will enable automatic loading of metatdata.
+// The following are no longer required since the Thing configuration will enable automatic loading of metatdata.
 // However the examples are still valid for advanced use cases where retrieving metadata from an arbitrary content handle is desired.
 
 rule "Load selected item Metadata"

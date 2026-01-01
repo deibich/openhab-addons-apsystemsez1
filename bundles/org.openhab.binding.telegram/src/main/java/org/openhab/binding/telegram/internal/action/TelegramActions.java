@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2010-2024 Contributors to the openHAB project
+/*
+ * Copyright (c) 2010-2025 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -19,10 +19,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URI;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Base64;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -50,10 +51,17 @@ import org.slf4j.LoggerFactory;
 
 import com.pengrad.telegrambot.model.request.InlineKeyboardButton;
 import com.pengrad.telegrambot.model.request.InlineKeyboardMarkup;
+import com.pengrad.telegrambot.model.request.InputMedia;
+import com.pengrad.telegrambot.model.request.InputMediaAnimation;
+import com.pengrad.telegrambot.model.request.InputMediaAudio;
+import com.pengrad.telegrambot.model.request.InputMediaDocument;
+import com.pengrad.telegrambot.model.request.InputMediaPhoto;
+import com.pengrad.telegrambot.model.request.InputMediaVideo;
 import com.pengrad.telegrambot.request.AnswerCallbackQuery;
 import com.pengrad.telegrambot.request.DeleteMessage;
 import com.pengrad.telegrambot.request.EditMessageReplyMarkup;
 import com.pengrad.telegrambot.request.SendAnimation;
+import com.pengrad.telegrambot.request.SendMediaGroup;
 import com.pengrad.telegrambot.request.SendMessage;
 import com.pengrad.telegrambot.request.SendPhoto;
 import com.pengrad.telegrambot.request.SendVideo;
@@ -111,7 +119,7 @@ public class TelegramActions implements ThingActions {
     }
 
     @RuleAction(label = "send an answer", description = "Send a Telegram answer using the Telegram API.")
-    public @ActionOutput(name = "success", type = "java.lang.Boolean") boolean sendTelegramAnswer(
+    public @ActionOutput(label = "Success", type = "java.lang.Boolean") boolean sendTelegramAnswer(
             @ActionInput(name = "chatId") @Nullable Long chatId,
             @ActionInput(name = "callbackId") @Nullable String callbackId,
             @ActionInput(name = "messageId") @Nullable Long messageId,
@@ -149,7 +157,7 @@ public class TelegramActions implements ThingActions {
     }
 
     @RuleAction(label = "send an answer", description = "Send a Telegram answer using the Telegram API.")
-    public @ActionOutput(name = "success", type = "java.lang.Boolean") boolean sendTelegramAnswer(
+    public @ActionOutput(label = "Success", type = "java.lang.Boolean") boolean sendTelegramAnswer(
             @ActionInput(name = "chatId") @Nullable Long chatId,
             @ActionInput(name = "replyId") @Nullable String replyId,
             @ActionInput(name = "message") @Nullable String message) {
@@ -177,7 +185,7 @@ public class TelegramActions implements ThingActions {
     }
 
     @RuleAction(label = "send an answer", description = "Send a Telegram answer using the Telegram API.")
-    public @ActionOutput(name = "success", type = "java.lang.Boolean") boolean sendTelegramAnswer(
+    public @ActionOutput(label = "Success", type = "java.lang.Boolean") boolean sendTelegramAnswer(
             @ActionInput(name = "replyId") @Nullable String replyId,
             @ActionInput(name = "message") @Nullable String message) {
         TelegramHandler localHandler = handler;
@@ -192,14 +200,14 @@ public class TelegramActions implements ThingActions {
     }
 
     @RuleAction(label = "send a message", description = "Send a Telegram message using the Telegram API.")
-    public @ActionOutput(name = "success", type = "java.lang.Boolean") boolean sendTelegram(
+    public @ActionOutput(label = "Success", type = "java.lang.Boolean") boolean sendTelegram(
             @ActionInput(name = "chatId") @Nullable Long chatId,
             @ActionInput(name = "message") @Nullable String message) {
-        return sendTelegramGeneral(chatId, message, (String) null);
+        return sendTelegramGeneral(chatId, message, (String) null, null, null, null);
     }
 
     @RuleAction(label = "send a message", description = "Send a Telegram message using the Telegram API.")
-    public @ActionOutput(name = "success", type = "java.lang.Boolean") boolean sendTelegram(
+    public @ActionOutput(label = "Success", type = "java.lang.Boolean") boolean sendTelegram(
             @ActionInput(name = "message") @Nullable String message) {
         TelegramHandler localHandler = handler;
         if (localHandler != null) {
@@ -213,16 +221,16 @@ public class TelegramActions implements ThingActions {
     }
 
     @RuleAction(label = "send a query", description = "Send a Telegram Query using the Telegram API.")
-    public @ActionOutput(name = "success", type = "java.lang.Boolean") boolean sendTelegramQuery(
+    public @ActionOutput(label = "Success", type = "java.lang.Boolean") boolean sendTelegramQuery(
             @ActionInput(name = "chatId") @Nullable Long chatId,
             @ActionInput(name = "message") @Nullable String message,
             @ActionInput(name = "replyId") @Nullable String replyId,
             @ActionInput(name = "buttons") @Nullable String... buttons) {
-        return sendTelegramGeneral(chatId, message, replyId, buttons);
+        return sendTelegramGeneral(chatId, message, replyId, null, null, null, buttons);
     }
 
     @RuleAction(label = "send a query", description = "Send a Telegram Query using the Telegram API.")
-    public @ActionOutput(name = "success", type = "java.lang.Boolean") boolean sendTelegramQuery(
+    public @ActionOutput(label = "Success", type = "java.lang.Boolean") boolean sendTelegramQuery(
             @ActionInput(name = "message") @Nullable String message,
             @ActionInput(name = "replyId") @Nullable String replyId,
             @ActionInput(name = "buttons") @Nullable String... buttons) {
@@ -238,7 +246,8 @@ public class TelegramActions implements ThingActions {
     }
 
     private boolean sendTelegramGeneral(@Nullable Long chatId, @Nullable String message, @Nullable String replyId,
-            @Nullable String... buttons) {
+            @Nullable Integer replyToMessageId, @Nullable Boolean disableNotification,
+            @Nullable Integer messageThreadId, @Nullable String... buttons) {
         if (message == null) {
             logger.warn("Message not defined; action skipped.");
             return false;
@@ -250,6 +259,15 @@ public class TelegramActions implements ThingActions {
         TelegramHandler localHandler = handler;
         if (localHandler != null) {
             SendMessage sendMessage = new SendMessage(chatId, message);
+            if (replyToMessageId != null) {
+                sendMessage.replyToMessageId(replyToMessageId);
+            }
+            if (disableNotification != null) {
+                sendMessage.disableNotification(disableNotification);
+            }
+            if (messageThreadId != null) {
+                sendMessage.messageThreadId(messageThreadId);
+            }
             if (localHandler.getParseMode() != null) {
                 sendMessage.parseMode(localHandler.getParseMode());
             }
@@ -277,7 +295,7 @@ public class TelegramActions implements ThingActions {
             try {
                 retMessage = localHandler.execute(sendMessage);
             } catch (Exception e) {
-                logger.warn("Exception occured whilst sending message:{}", e.getMessage());
+                logger.warn("Exception occurred whilst sending message:{}", e.getMessage());
             }
             if (!evaluateResponse(retMessage)) {
                 return false;
@@ -293,7 +311,7 @@ public class TelegramActions implements ThingActions {
     }
 
     @RuleAction(label = "delete a query", description = "Delete a Query using the Telegram API.")
-    public @ActionOutput(name = "success", type = "java.lang.Boolean") boolean deleteTelegramQuery(
+    public @ActionOutput(label = "Success", type = "java.lang.Boolean") boolean deleteTelegramQuery(
             @ActionInput(name = "replyId") @Nullable String replyId) {
         if (replyId == null) {
             logger.warn("deleteTelegramQuery() - replyId not passed!");
@@ -327,7 +345,7 @@ public class TelegramActions implements ThingActions {
     } // public boolean deleteTelegramQuery(String replyId)
 
     @RuleAction(label = "send a message", description = "Send a Telegram using the Telegram API.")
-    public @ActionOutput(name = "success", type = "java.lang.Boolean") boolean sendTelegram(
+    public @ActionOutput(label = "Success", type = "java.lang.Boolean") boolean sendTelegram(
             @ActionInput(name = "chatId") @Nullable Long chatId,
             @ActionInput(name = "message") @Nullable String message,
             @ActionInput(name = "args") @Nullable Object... args) {
@@ -338,7 +356,7 @@ public class TelegramActions implements ThingActions {
     }
 
     @RuleAction(label = "send a message", description = "Send a Telegram using the Telegram API.")
-    public @ActionOutput(name = "success", type = "java.lang.Boolean") boolean sendTelegram(
+    public @ActionOutput(label = "Success", type = "java.lang.Boolean") boolean sendTelegram(
             @ActionInput(name = "message") @Nullable String message,
             @ActionInput(name = "args") @Nullable Object... args) {
         TelegramHandler localHandler = handler;
@@ -352,8 +370,38 @@ public class TelegramActions implements ThingActions {
         return true;
     }
 
+    @RuleAction(label = "@text/action.send-telegram-to.label", description = "@text/action.send-telegram-to.description")
+    public @ActionOutput(label = "Success", type = "java.lang.Boolean") boolean sendTelegramTo(
+            @ActionInput(name = "chatIds") @Nullable Long @Nullable [] chatIds,
+            @ActionInput(name = "message") @Nullable String message,
+            @ActionInput(name = "replyMessageId") @Nullable Integer replyMessageId,
+            @ActionInput(name = "silent") @Nullable Boolean silent,
+            @ActionInput(name = "messageThreadId") @Nullable Integer messageThreadId,
+            @ActionInput(name = "args") @Nullable Object... args) {
+        if (message == null) {
+            return false;
+        }
+        TelegramHandler localHandler = handler;
+        List<Long> chatIdentifiers = Collections.emptyList();
+        if (chatIds != null) {
+            Long[] chatIdentifiersArray = chatIds; // compiler vs null annotation fix
+            chatIdentifiers = List.of(chatIdentifiersArray);
+        } else if (localHandler != null) {
+            chatIdentifiers = localHandler.getReceiverChatIds();
+        }
+
+        boolean successful = true;
+        for (Long chatId : chatIdentifiers) {
+            // supports both with and without args
+            successful &= sendTelegramGeneral(chatId, String.format(message, args), (String) null, replyMessageId,
+                    silent, messageThreadId);
+        }
+
+        return successful;
+    }
+
     @RuleAction(label = "send a photo", description = "Send a picture using the Telegram API.")
-    public @ActionOutput(name = "success", type = "java.lang.Boolean") boolean sendTelegramPhoto(
+    public @ActionOutput(label = "Success", type = "java.lang.Boolean") boolean sendTelegramPhoto(
             @ActionInput(name = "chatId") @Nullable Long chatId,
             @ActionInput(name = "photoURL") @Nullable String photoURL,
             @ActionInput(name = "caption") @Nullable String caption) {
@@ -361,7 +409,7 @@ public class TelegramActions implements ThingActions {
     }
 
     @RuleAction(label = "send a photo", description = "Send a picture using the Telegram API.")
-    public @ActionOutput(name = "success", type = "java.lang.Boolean") boolean sendTelegramPhoto(
+    public @ActionOutput(label = "Success", type = "java.lang.Boolean") boolean sendTelegramPhoto(
             @ActionInput(name = "chatId") @Nullable Long chatId,
             @ActionInput(name = "photoURL") @Nullable String photoURL,
             @ActionInput(name = "caption") @Nullable String caption,
@@ -424,7 +472,7 @@ public class TelegramActions implements ThingActions {
                     temp = "file://" + photoURL;
                 }
                 try {
-                    sendPhoto = new SendPhoto(chatId, Path.of(new URL(temp).getPath()).toFile());
+                    sendPhoto = new SendPhoto(chatId, Path.of(URI.create(temp).toURL().getPath()).toFile());
                 } catch (MalformedURLException e) {
                     logger.warn("Malformed URL: {}", photoURL);
                     return false;
@@ -465,7 +513,7 @@ public class TelegramActions implements ThingActions {
     }
 
     @RuleAction(label = "send a photo", description = "Send a Picture using the Telegram API.")
-    public @ActionOutput(name = "success", type = "java.lang.Boolean") boolean sendTelegramPhoto(
+    public @ActionOutput(label = "Success", type = "java.lang.Boolean") boolean sendTelegramPhoto(
             @ActionInput(name = "photoURL") @Nullable String photoURL,
             @ActionInput(name = "caption") @Nullable String caption,
             @ActionInput(name = "username") @Nullable String username,
@@ -482,14 +530,111 @@ public class TelegramActions implements ThingActions {
     }
 
     @RuleAction(label = "send a photo", description = "Send a Picture using the Telegram API.")
-    public @ActionOutput(name = "success", type = "java.lang.Boolean") boolean sendTelegramPhoto(
+    public @ActionOutput(label = "Success", type = "java.lang.Boolean") boolean sendTelegramPhoto(
             @ActionInput(name = "photoURL") @Nullable String photoURL,
             @ActionInput(name = "caption") @Nullable String caption) {
         return sendTelegramPhoto(photoURL, caption, null, null);
     }
 
+    @RuleAction(label = "send a media group", description = "Send a Telegram media group using the Telegram API.")
+    public @ActionOutput(label = "Success", type = "java.lang.Boolean") boolean sendTelegramMediaGroup(
+            @ActionInput(name = "chatId") @Nullable Long chatId,
+            @ActionInput(name = "mediaUrls") @Nullable List<String> mediaUrls,
+            @ActionInput(name = "mediaTypes") @Nullable List<String> mediaTypes) {
+        return sendTelegramMediaGroup(chatId, mediaUrls, mediaTypes, null, null, null);
+    }
+
+    @RuleAction(label = "send a media group", description = "Send a Telegram media group using the Telegram API.")
+    public @ActionOutput(label = "Success", type = "java.lang.Boolean") boolean sendTelegramMediaGroup(
+            @ActionInput(name = "mediaUrls") @Nullable List<String> mediaUrls,
+            @ActionInput(name = "mediaTypes") @Nullable List<String> mediaTypes) {
+        return sendTelegramMediaGroup(null, mediaUrls, mediaTypes, null, null, null);
+    }
+
+    @RuleAction(label = "send a media group", description = "Send a Telegram media group using the Telegram API.")
+    public @ActionOutput(label = "Success", type = "java.lang.Boolean") boolean sendTelegramMediaGroup(
+            @ActionInput(name = "chatId") @Nullable Long chatId,
+            @ActionInput(name = "mediaUrls") @Nullable List<String> mediaUrls,
+            @ActionInput(name = "mediaTypes") @Nullable List<String> mediaTypes,
+            @ActionInput(name = "replyToMessageId") @Nullable Integer replyToMessageId,
+            @ActionInput(name = "disableNotification") @Nullable Boolean disableNotification,
+            @ActionInput(name = "messageThreadId") @Nullable Integer messageThreadId) {
+        TelegramHandler localHandler = handler;
+        if (localHandler == null) {
+            logger.warn("TelegramActions: Action service ThingHandler is null");
+            return false;
+        }
+
+        if (mediaUrls == null || mediaUrls.isEmpty()) {
+            logger.warn("mediaUrls cannot be null or empty");
+            return false;
+        }
+
+        if (mediaTypes == null || mediaTypes.size() != mediaUrls.size()) {
+            logger.warn("mediaTypes must have the same size as mediaUrls");
+            return false;
+        }
+
+        List<Long> chatIdentifiers = (chatId != null) ? List.of(chatId) : localHandler.getReceiverChatIds();
+
+        boolean successful = true;
+        for (Long chat : chatIdentifiers) {
+            InputMedia<?>[] mediaArray = new InputMedia<?>[mediaUrls.size()];
+
+            for (int i = 0; i < mediaUrls.size(); i++) {
+                String url = mediaUrls.get(i);
+                String type = mediaTypes.get(i).toLowerCase();
+
+                try {
+                    InputMedia<?> media = switch (type) {
+                        case "photo" -> new InputMediaPhoto(url);
+                        case "video" -> new InputMediaVideo(url);
+                        case "animation" -> new InputMediaAnimation(url);
+                        case "audio" -> new InputMediaAudio(url);
+                        case "document" -> new InputMediaDocument(url);
+                        default -> {
+                            logger.warn("Unknown media type: {}", type);
+                            yield null;
+                        }
+                    };
+
+                    if (media == null) {
+                        successful = false;
+                        break;
+                    }
+
+                    mediaArray[i] = media;
+                } catch (IllegalArgumentException e) {
+                    logger.warn("Failed to create media object for URL {}: {}", url, e.getMessage());
+                    successful = false;
+                    break;
+                }
+            }
+
+            if (!successful) {
+                continue;
+            }
+
+            SendMediaGroup request = new SendMediaGroup(chat, mediaArray);
+
+            if (replyToMessageId != null) {
+                request.replyToMessageId(replyToMessageId);
+            }
+            if (disableNotification != null) {
+                request.disableNotification(disableNotification);
+            }
+            if (messageThreadId != null) {
+                request.messageThreadId(messageThreadId);
+            }
+
+            successful &= evaluateResponse(localHandler.execute(request));
+        }
+
+        return successful;
+    }
+
     @RuleAction(label = "send animation", description = "Send an Animation using the Telegram API.")
-    public @ActionOutput(name = "success", type = "java.lang.Boolean") boolean sendTelegramAnimation(
+    public @ActionOutput(label = "Success", type = "java.lang.Boolean") boolean sendTelegramAnimation(
             @ActionInput(name = "animationURL") @Nullable String animationURL,
             @ActionInput(name = "caption") @Nullable String caption) {
         TelegramHandler localHandler = handler;
@@ -504,7 +649,7 @@ public class TelegramActions implements ThingActions {
     }
 
     @RuleAction(label = "send animation", description = "Send an Animation using the Telegram API.")
-    public @ActionOutput(name = "success", type = "java.lang.Boolean") boolean sendTelegramAnimation(
+    public @ActionOutput(label = "Success", type = "java.lang.Boolean") boolean sendTelegramAnimation(
             @ActionInput(name = "chatId") @Nullable Long chatId,
             @ActionInput(name = "animationURL") @Nullable String animationURL,
             @ActionInput(name = "caption") @Nullable String caption) {
@@ -553,7 +698,7 @@ public class TelegramActions implements ThingActions {
                 // Load video from local file system
                 logger.debug("Read file from local file system: {}", animationURL);
                 try {
-                    sendAnimation = new SendAnimation(chatId, Path.of(new URL(temp).getPath()).toFile());
+                    sendAnimation = new SendAnimation(chatId, Path.of(URI.create(temp).toURL().getPath()).toFile());
                 } catch (MalformedURLException e) {
                     logger.warn("Malformed URL, should start with http or file: {}", animationURL);
                     return false;
@@ -571,7 +716,7 @@ public class TelegramActions implements ThingActions {
     }
 
     @RuleAction(label = "send video", description = "Send a Video using the Telegram API.")
-    public @ActionOutput(name = "success", type = "java.lang.Boolean") boolean sendTelegramVideo(
+    public @ActionOutput(label = "Success", type = "java.lang.Boolean") boolean sendTelegramVideo(
             @ActionInput(name = "videoURL") @Nullable String videoURL,
             @ActionInput(name = "caption") @Nullable String caption) {
         TelegramHandler localHandler = handler;
@@ -586,7 +731,7 @@ public class TelegramActions implements ThingActions {
     }
 
     @RuleAction(label = "send video", description = "Send a Video using the Telegram API.")
-    public @ActionOutput(name = "success", type = "java.lang.Boolean") boolean sendTelegramVideo(
+    public @ActionOutput(label = "Success", type = "java.lang.Boolean") boolean sendTelegramVideo(
             @ActionInput(name = "chatId") @Nullable Long chatId,
             @ActionInput(name = "videoURL") @Nullable String videoURL,
             @ActionInput(name = "caption") @Nullable String caption) {
@@ -639,7 +784,7 @@ public class TelegramActions implements ThingActions {
                 // Load video from local file system with file://path
                 logger.debug("Read file from local file: {}", videoURL);
                 try {
-                    sendVideo = new SendVideo(chatId, Path.of(new URL(temp).getPath()).toFile());
+                    sendVideo = new SendVideo(chatId, Path.of(URI.create(temp).toURL().getPath()).toFile());
                 } catch (MalformedURLException e) {
                     logger.warn("Malformed URL, should start with http or file: {}", videoURL);
                     return false;
@@ -704,6 +849,13 @@ public class TelegramActions implements ThingActions {
         return ((TelegramActions) actions).sendTelegram(chatId, format, args);
     }
 
+    public static boolean sendTelegramTo(ThingActions actions, @Nullable Long @Nullable [] chatIds,
+            @Nullable String message, @Nullable Integer replyMessageId, @Nullable Boolean silent,
+            @Nullable Integer messageThreadId, @Nullable Object... args) {
+        return ((TelegramActions) actions).sendTelegramTo(chatIds, message, replyMessageId, silent, messageThreadId,
+                args);
+    }
+
     public static boolean sendTelegramQuery(ThingActions actions, @Nullable Long chatId, @Nullable String message,
             @Nullable String replyId, @Nullable String... buttons) {
         return ((TelegramActions) actions).sendTelegramQuery(chatId, message, replyId, buttons);
@@ -732,6 +884,23 @@ public class TelegramActions implements ThingActions {
     public static boolean sendTelegramAnswer(ThingActions actions, @Nullable Long chatId, @Nullable String replyId,
             @Nullable String message) {
         return ((TelegramActions) actions).sendTelegramAnswer(chatId, replyId, message);
+    }
+
+    public static boolean sendTelegramMediaGroup(ThingActions actions, @Nullable Long chatId,
+            @Nullable List<String> mediaUrls, @Nullable List<String> mediaTypes) {
+        return ((TelegramActions) actions).sendTelegramMediaGroup(chatId, mediaUrls, mediaTypes);
+    }
+
+    public static boolean sendTelegramMediaGroup(ThingActions actions, @Nullable List<String> mediaUrls,
+            @Nullable List<String> mediaTypes) {
+        return ((TelegramActions) actions).sendTelegramMediaGroup(mediaUrls, mediaTypes);
+    }
+
+    public static boolean sendTelegramMediaGroup(ThingActions actions, @Nullable Long chatId,
+            @Nullable List<String> mediaUrls, @Nullable List<String> mediaTypes, @Nullable Integer replyToMessageId,
+            @Nullable Boolean disableNotification, @Nullable Integer messageThreadId) {
+        return ((TelegramActions) actions).sendTelegramMediaGroup(chatId, mediaUrls, mediaTypes, replyToMessageId,
+                disableNotification, messageThreadId);
     }
 
     public static boolean sendTelegramAnswer(ThingActions actions, @Nullable String chatId, @Nullable String replyId,

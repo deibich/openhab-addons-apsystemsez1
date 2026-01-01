@@ -4,7 +4,7 @@ This binding supports [HP Printers](https://store.hp.com/us/en/cv/printers), whi
 
 ## Supported Things
 
-There is only one thing type named `printer`.
+There is only one Thing type named `printer`.
 All channels are added dynamically depending on the type of printer and its capabilities.
 
 ## Discovery
@@ -77,7 +77,7 @@ Notes:
 
 - All channels are dynamically added at runtime.
 - The word color in channel names follows American spelling ("color").
-- The `colorLevel`, `colorMarkingUsed` and `colorPagesRemaining` channels are used on printers that have only a single color cartridge instead of separate Ccyan, magenta and yellow cartridges.
+- The `colorLevel`, `colorMarkingUsed`, and `colorPagesRemaining` channels are used on printers that have only a single color cartridge instead of separate cyan, magenta, and yellow cartridges.
 - The `scanner` group is for the scanning engine which consists of scan, copy and other operations; the `scan` group is for scanner operations only.
 - If no `status` group channels are selected, then those relevant data endpoints on the _Embedded Web Server_ are not polled for status information.
 
@@ -112,8 +112,7 @@ Black Ink displayed as a whole percentage - `60 %`
 Text item=hpprinter_printer_djprinter_ink_blackLevel label="Black [%.0f %unit%]"
 ```
 
-Black Marker displayed in millilitres - `21 ml`
-_Default_
+Black Marker displayed in millilitres - `21 ml` _Default_
 
 ```perl
 Text item=hpprinter_printer_djprinter_usage_blackMarker label="Black Marker [%.0f %unit%]"

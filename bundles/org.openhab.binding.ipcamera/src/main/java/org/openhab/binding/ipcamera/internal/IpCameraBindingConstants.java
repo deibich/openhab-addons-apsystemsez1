@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2010-2024 Contributors to the openHAB project
+/*
+ * Copyright (c) 2010-2025 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -28,7 +28,7 @@ import org.openhab.core.thing.ThingTypeUID;
  */
 @NonNullByDefault
 public class IpCameraBindingConstants {
-    private static final String BINDING_ID = "ipcamera";
+    public static final String BINDING_ID = "ipcamera";
     public static final String AUTH_HANDLER = "authorizationHandler";
     public static final String AMCREST_HANDLER = "amcrestHandler";
     public static final String COMMON_HANDLER = "commonHandler";
@@ -84,6 +84,7 @@ public class IpCameraBindingConstants {
 
     // List of all Channel ids
     public static final String CHANNEL_POLL_IMAGE = "pollImage";
+    public static final String CHANNEL_CREATE_SNAPSHOTS = "createSnapshots";
     public static final String CHANNEL_RECORDING_GIF = "recordingGif";
     public static final String CHANNEL_GIF_HISTORY = "gifHistory";
     public static final String CHANNEL_GIF_HISTORY_LENGTH = "gifHistoryLength";
@@ -150,4 +151,12 @@ public class IpCameraBindingConstants {
     public static final String CHANNEL_ENABLE_PUSH = "enablePush";
     public static final String CHANNEL_ENABLE_RECORDINGS = "enableRecordings";
     public static final String CHANNEL_AUTO_TRACKING = "autoTracking";
+    public static final String CHANNEL_ACCEPTED_CARD_NUMBER = "acceptedCardNumber";
+    public static final String CHANNEL_UNACCEPTED_CARD_NUMBER = "unacceptedCardNumber";
+    public static final String CHANNEL_DOOR_UNLOCK = "doorUnlock";
+    public static final String CHANNEL_DOOR_CONTACT = "doorContact";
+    public static final String CHANNEL_EXIT_BUTTON = "exitButton";
+    public static final String CHANNEL_MOTION_DETECTION_LEVEL = "motionDetectionLevel";
+    public static final String CHANNEL_EXIT_BUTTON_ENABLED = "exitButtonEnabled";
+    public static final String CHANNEL_MAGNETIC_LOCK_WARNING = "magneticLockWarning";
 }

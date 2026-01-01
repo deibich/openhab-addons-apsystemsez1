@@ -7,6 +7,7 @@
 	<bridge-type id="bridge">
 		<label>@text/bridgeLabel</label>
 		<description>@text/bridgeDescription</description>
+		<semantic-equipment-tag>NetworkAppliance</semantic-equipment-tag>
 		<channels>
 			<channel id="alarm" typeId="alarm"/>
 			<channel id="notice" typeId="notice"/>
@@ -34,6 +35,7 @@
 	<bridge-type id="bridge2">
 		<label>@text/bridge2Label</label>
 		<description>@text/bridge2Description</description>
+		<semantic-equipment-tag>NetworkAppliance</semantic-equipment-tag>
 		<channels>
 			<channel id="alarm" typeId="alarm"/>
 			<channel id="notice" typeId="notice"/>
@@ -77,6 +79,7 @@
 		</supported-bridge-type-refs>
 		<label>@text/pushButtonLabel</label>
 		<description>@text/pushButtonDescription</description>
+		<semantic-equipment-tag>Button</semantic-equipment-tag>
 		<channels>
 			<channel id="button" typeId="button"/>
 		</channels>
@@ -94,6 +97,7 @@
 		</supported-bridge-type-refs>
 		<label>@text/onOffLabel</label>
 		<description>@text/onOffDescription</description>
+		<semantic-equipment-tag>LightSource</semantic-equipment-tag>
 		<channels>
 			<channel id="switch" typeId="system.power"/>
 		</channels>
@@ -111,6 +115,7 @@
 		</supported-bridge-type-refs>
 		<label>@text/dimmerLabel</label>
 		<description>@text/dimmerDescription</description>
+		<semantic-equipment-tag>LightSource</semantic-equipment-tag>
 		<channels>
 			<channel id="brightness" typeId="system.brightness"/>
 		</channels>
@@ -134,6 +139,7 @@
 		</supported-bridge-type-refs>
 		<label>@text/blindLabel</label>
 		<description>@text/blindDescription</description>
+		<semantic-equipment-tag>Blinds</semantic-equipment-tag>
 		<channels>
 			<channel id="rollershutter" typeId="rollershutter"/>
 		</channels>
@@ -157,6 +163,7 @@
 		</supported-bridge-type-refs>
 		<label>@text/thermostatLabel</label>
 		<description>@text/thermostatDescription</description>
+		<semantic-equipment-tag>Thermostat</semantic-equipment-tag>
 		<channels>
 			<channel id="measured" typeId="measured"/>
 			<channel id="heatingmode" typeId="heatingmode"/>
@@ -179,18 +186,58 @@
 			</parameter>
 		</config-description>
 	</thing-type>
-	<thing-type id="energyMeterLive">
+	<thing-type id="energyMeterHome">
 		<supported-bridge-type-refs>
-			<bridge-type-ref id="bridge"/>
 			<bridge-type-ref id="bridge2"/>
 		</supported-bridge-type-refs>
-		<label>@text/energyMeterLiveLabel</label>
-		<description>@text/energyMeterLiveDescription</description>
+		<label>@text/energyMeterHomeLabel</label>
+		<description>@text/energyMeterHomeDescription</description>
+		<semantic-equipment-tag>ElectricMeter</semantic-equipment-tag>
 		<channels>
 			<channel id="power" typeId="power"/>
+			<channel id="powerfromgrid" typeId="power">
+				<label>@text/channelPowerFromGridLabel</label>
+				<description>@text/channelPowerFromGridDescription</description>
+			</channel>
+			<channel id="powertogrid" typeId="power">
+				<label>@text/channelPowerToGridLabel</label>
+				<description>@text/channelPowerToGridDescription</description>
+			</channel>
+			<channel id="peakpowerfromgrid" typeId="power">
+				<label>@text/channelPeakPowerFromGridLabel</label>
+				<description>@text/channelPeakPowerFromGridDescription</description>
+			</channel>
 			<channel id="energy" typeId="energy"/>
 			<channel id="energyday" typeId="energyday"/>
-			<channel id="energylast" typeId="measurementtime"/>
+			<channel id="energyfromgrid" typeId="energy">
+				<label>@text/channelEnergyFromGridLabel</label>
+				<description>@text/channelEnergyFromGridDescription</description>
+			</channel>
+			<channel id="energyfromgridday" typeId="energyday">
+				<label>@text/channelEnergyFromGridDayLabel</label>
+				<description>@text/channelEnergyFromGridDayDescription</description>
+			</channel>
+			<channel id="energytogrid" typeId="energy">
+				<label>@text/channelEnergyToGridLabel</label>
+				<description>@text/channelEnergyToGridDescription</description>
+			</channel>
+			<channel id="energytogridday" typeId="energyday">
+				<label>@text/channelEnergyToGridDayLabel</label>
+				<description>@text/channelEnergyToGridDayDescription</description>
+			</channel>
+			<channel id="energyselfconsumption" typeId="energy">
+				<label>@text/channelEnergySelfConsumptionLabel</label>
+				<description>@text/channelEnergySelfConsumptionDescription</description>
+			</channel>
+			<channel id="energyselfconsumptionday" typeId="energyday">
+				<label>@text/channelEnergySelfConsumptionDayLabel</label>
+				<description>@text/channelEnergySelfConsumptionDayDescription</description>
+			</channel>
+			<channel id="gas" typeId="gas"/>
+			<channel id="gasday" typeId="gasday"/>
+			<channel id="water" typeId="water"/>
+			<channel id="waterday" typeId="waterday"/>
+			<channel id="measurementtime" typeId="measurementtime"/>
 		</channels>
 		<config-description>
 			<parameter name="meterId" type="text" required="true">
@@ -201,6 +248,48 @@
 				<label>@text/meterConfigRefreshLabel</label>
 				<description>@text/meterConfigRefreshDescription</description>
 				<default>10</default>
+				<advanced>true</advanced>
+			</parameter>
+			<parameter name="startDate" type="text">
+				<context>datetime</context>
+				<label>@text/meterConfigStartDateLabel</label>
+				<description>@text/meterConfigStartDateDescription</description>
+				<advanced>true</advanced>
+			</parameter>
+		</config-description>
+	</thing-type>
+	<thing-type id="energyMeterLive">
+		<supported-bridge-type-refs>
+			<bridge-type-ref id="bridge"/>
+			<bridge-type-ref id="bridge2"/>
+		</supported-bridge-type-refs>
+		<label>@text/energyMeterLiveLabel</label>
+		<description>@text/energyMeterLiveDescription</description>
+		<semantic-equipment-tag>ElectricMeter</semantic-equipment-tag>
+		<channels>
+			<channel id="power" typeId="power"/>
+			<channel id="energy" typeId="energy"/>
+			<channel id="energyday" typeId="energyday"/>
+			<channel id="measurementtime" typeId="measurementtime"/>
+		</channels>
+		<properties>
+			<property name="thingTypeVersion">1</property>
+		</properties>
+		<config-description>
+			<parameter name="meterId" type="text" required="true">
+				<label>@text/deviceConfigDeviceIdLabel</label>
+				<description>@text/deviceConfigDeviceIdDescription</description>
+			</parameter>
+			<parameter name="refresh" type="integer" min="5">
+				<label>@text/meterConfigRefreshLabel</label>
+				<description>@text/meterConfigRefreshDescription</description>
+				<default>10</default>
+				<advanced>true</advanced>
+			</parameter>
+			<parameter name="startDate" type="text">
+				<context>datetime</context>
+				<label>@text/meterConfigStartDateLabel</label>
+				<description>@text/meterConfigStartDateDescription</description>
 				<advanced>true</advanced>
 			</parameter>
 			<parameter name="invert" type="boolean">
@@ -214,14 +303,19 @@
 	<thing-type id="energyMeter">
 		<supported-bridge-type-refs>
 			<bridge-type-ref id="bridge"/>
+			<bridge-type-ref id="bridge2"/>
 		</supported-bridge-type-refs>
 		<label>@text/energyMeterLabel</label>
 		<description>@text/energyMeterDescription</description>
+		<semantic-equipment-tag>ElectricMeter</semantic-equipment-tag>
 		<channels>
 			<channel id="energy" typeId="energy"/>
 			<channel id="energyday" typeId="energyday"/>
-			<channel id="energylast" typeId="measurementtime"/>
+			<channel id="measurementtime" typeId="measurementtime"/>
 		</channels>
+		<properties>
+			<property name="thingTypeVersion">1</property>
+		</properties>
 		<config-description>
 			<parameter name="meterId" type="text" required="true">
 				<label>@text/deviceConfigDeviceIdLabel</label>
@@ -231,6 +325,12 @@
 				<label>@text/meterConfigRefreshLabel</label>
 				<description>@text/meterConfigRefreshDescription</description>
 				<default>10</default>
+				<advanced>true</advanced>
+			</parameter>
+			<parameter name="startDate" type="text">
+				<context>datetime</context>
+				<label>@text/meterConfigStartDateLabel</label>
+				<description>@text/meterConfigStartDateDescription</description>
 				<advanced>true</advanced>
 			</parameter>
 			<parameter name="invert" type="boolean">
@@ -244,14 +344,19 @@
 	<thing-type id="gasMeter">
 		<supported-bridge-type-refs>
 			<bridge-type-ref id="bridge"/>
+			<bridge-type-ref id="bridge2"/>
 		</supported-bridge-type-refs>
 		<label>@text/gasMeterLabel</label>
 		<description>@text/gasMeterDescription</description>
+		<semantic-equipment-tag>GasMeter</semantic-equipment-tag>
 		<channels>
 			<channel id="gas" typeId="gas"/>
 			<channel id="gasday" typeId="gasday"/>
-			<channel id="gaslast" typeId="measurementtime"/>
+			<channel id="measurementtime" typeId="measurementtime"/>
 		</channels>
+		<properties>
+			<property name="thingTypeVersion">1</property>
+		</properties>
 		<config-description>
 			<parameter name="meterId" type="text" required="true">
 				<label>@text/deviceConfigDeviceIdLabel</label>
@@ -261,6 +366,12 @@
 				<label>@text/meterConfigRefreshLabel</label>
 				<description>@text/meterConfigRefreshDescription</description>
 				<default>10</default>
+				<advanced>true</advanced>
+			</parameter>
+			<parameter name="startDate" type="text">
+				<context>datetime</context>
+				<label>@text/meterConfigStartDateLabel</label>
+				<description>@text/meterConfigStartDateDescription</description>
 				<advanced>true</advanced>
 			</parameter>
 			<parameter name="invert" type="boolean">
@@ -274,14 +385,19 @@
 	<thing-type id="waterMeter">
 		<supported-bridge-type-refs>
 			<bridge-type-ref id="bridge"/>
+			<bridge-type-ref id="bridge2"/>
 		</supported-bridge-type-refs>
 		<label>@text/waterMeterLabel</label>
 		<description>@text/waterMeterDescription</description>
+		<semantic-equipment-tag>WaterMeter</semantic-equipment-tag>
 		<channels>
 			<channel id="water" typeId="water"/>
 			<channel id="waterday" typeId="waterday"/>
-			<channel id="waterlast" typeId="measurementtime"/>
+			<channel id="measurementtime" typeId="measurementtime"/>
 		</channels>
+		<properties>
+			<property name="thingTypeVersion">1</property>
+		</properties>
 		<config-description>
 			<parameter name="meterId" type="text" required="true">
 				<label>@text/deviceConfigDeviceIdLabel</label>
@@ -291,6 +407,12 @@
 				<label>@text/meterConfigRefreshLabel</label>
 				<description>@text/meterConfigRefreshDescription</description>
 				<default>10</default>
+				<advanced>true</advanced>
+			</parameter>
+			<parameter name="startDate" type="text">
+				<context>datetime</context>
+				<label>@text/meterConfigStartDateLabel</label>
+				<description>@text/meterConfigStartDateDescription</description>
 				<advanced>true</advanced>
 			</parameter>
 			<parameter name="invert" type="boolean">
@@ -307,6 +429,7 @@
 		</supported-bridge-type-refs>
 		<label>@text/accessLabel</label>
 		<description>@text/accessDescription</description>
+		<semantic-equipment-tag>Doorbell</semantic-equipment-tag>
 		<channels>
 			<channel id="bellbutton" typeId="bellbutton"/>
 			<channel id="lock" typeId="lock"/>
@@ -324,6 +447,7 @@
 		</supported-bridge-type-refs>
 		<label>@text/accessRingAndComeInLabel</label>
 		<description>@text/accessRingAndComeInDescription</description>
+		<semantic-equipment-tag>Doorbell</semantic-equipment-tag>
 		<channels>
 			<channel id="bellbutton" typeId="bellbutton"/>
 			<channel id="ringandcomein" typeId="ringandcomein"/>
@@ -342,6 +466,7 @@
 		</supported-bridge-type-refs>
 		<label>@text/alarmLabel</label>
 		<description>@text/alarmDescription</description>
+		<semantic-equipment-tag>AlarmSystem</semantic-equipment-tag>
 		<channels>
 			<channel id="arm" typeId="system.power"/>
 			<channel id="armed" typeId="armed"/>
@@ -352,6 +477,57 @@
 			<parameter name="alarmId" type="text" required="true">
 				<label>@text/deviceConfigDeviceIdLabel</label>
 				<description>@text/deviceConfigDeviceIdDescription</description>
+			</parameter>
+		</config-description>
+	</thing-type>
+	<thing-type id="carCharger">
+		<supported-bridge-type-refs>
+			<bridge-type-ref id="bridge2"/>
+		</supported-bridge-type-refs>
+		<label>@text/carChargerLabel</label>
+		<description>@text/carChargerDescription</description>
+		<semantic-equipment-tag>EVSE</semantic-equipment-tag>
+		<channels>
+			<channel id="status" typeId="system.power">
+				<label>@text/channelCarChargerStatusLabel</label>
+				<description>@text/channelCarChargerStatusDescription</description>
+			</channel>
+			<channel id="chargingstatus" typeId="chargingstatus"/>
+			<channel id="evstatus" typeId="evstatus"/>
+			<channel id="couplingstatus" typeId="couplingstatus"/>
+			<channel id="power" typeId="power"/>
+			<channel id="chargingmode" typeId="chargingmode"/>
+			<channel id="targetdistance" typeId="targetdistance"/>
+			<channel id="targettime" typeId="targettime"/>
+			<channel id="boost" typeId="boost"/>
+			<channel id="reachabledistance" typeId="reachabledistance"/>
+			<channel id="nextchargingtime" typeId="nextchargingtime"/>
+			<channel id="energy" typeId="energy"/>
+			<channel id="energyday" typeId="energyday"/>
+			<channel id="measurementtime" typeId="measurementtime"/>
+		</channels>
+		<config-description>
+			<parameter name="carChargerId" type="text" required="true">
+				<label>@text/deviceConfigDeviceIdLabel</label>
+				<description>@text/deviceConfigDeviceIdDescription</description>
+			</parameter>
+			<parameter name="refresh" type="integer" min="5">
+				<label>@text/meterConfigRefreshLabel</label>
+				<description>@text/meterConfigRefreshDescription</description>
+				<default>10</default>
+				<advanced>true</advanced>
+			</parameter>
+			<parameter name="startDate" type="text">
+				<context>datetime</context>
+				<label>@text/meterConfigStartDateLabel</label>
+				<description>@text/meterConfigStartDateDescription</description>
+				<advanced>true</advanced>
+			</parameter>
+			<parameter name="invert" type="boolean">
+				<label>@text/meterConfigInvertLabel</label>
+				<description>@text/meterConfigInvertDescription</description>
+				<default>false</default>
+				<advanced>true</advanced>
 			</parameter>
 		</config-description>
 	</thing-type>
@@ -368,6 +544,10 @@
 		<label>@text/channelRollershutterLabel</label>
 		<description>@text/channelRollershutterDescription</description>
 		<category>Blinds</category>
+		<tags>
+			<tag>Control</tag>
+			<tag>OpenLevel</tag>
+		</tags>
 	</channel-type>
 
 	<channel-type id="measured">
@@ -402,6 +582,10 @@
 		<item-type>String</item-type>
 		<label>@text/channelModeLabel</label>
 		<description>@text/channelModeDescription</description>
+		<tags>
+			<tag>Control</tag>
+			<tag>Mode</tag>
+		</tags>
 		<state>
 			<options>
 				<option value="Day">@text/channelModeOption0</option>
@@ -461,48 +645,80 @@
 		<item-type>Number:Power</item-type>
 		<label>@text/channelPowerLabel</label>
 		<description>@text/channelPowerDescription</description>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Power</tag>
+		</tags>
 		<state readOnly="true" pattern="%.0f %unit%"/>
 	</channel-type>
 	<channel-type id="energy">
 		<item-type>Number:Energy</item-type>
 		<label>@text/channelEnergyLabel</label>
 		<description>@text/channelEnergyDescription</description>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Energy</tag>
+		</tags>
 		<state readOnly="true" pattern="%.1f %unit%"/>
 	</channel-type>
 	<channel-type id="energyday">
 		<item-type>Number:Energy</item-type>
 		<label>@text/channelEnergyDayLabel</label>
 		<description>@text/channelEnergyDayDescription</description>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Energy</tag>
+		</tags>
 		<state readOnly="true" pattern="%.1f %unit%"/>
 	</channel-type>
 	<channel-type id="gas">
 		<item-type>Number:Volume</item-type>
 		<label>@text/channelGasLabel</label>
 		<description>@text/channelGasDescription</description>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Gas</tag>
+		</tags>
 		<state readOnly="true" pattern="%.1f %unit%"/>
 	</channel-type>
 	<channel-type id="gasday">
 		<item-type>Number:Volume</item-type>
 		<label>@text/channelGasDayLabel</label>
 		<description>@text/channelGasDayDescription</description>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Gas</tag>
+		</tags>
 		<state readOnly="true" pattern="%.1f %unit%"/>
 	</channel-type>
 	<channel-type id="water">
 		<item-type>Number:Volume</item-type>
 		<label>@text/channelWaterLabel</label>
 		<description>@text/channelWaterDescription</description>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Water</tag>
+		</tags>
 		<state readOnly="true" pattern="%.1f %unit%"/>
 	</channel-type>
 	<channel-type id="waterday">
 		<item-type>Number:Volume</item-type>
 		<label>@text/channelWaterDayLabel</label>
 		<description>@text/channelWaterDayDescription</description>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Water</tag>
+		</tags>
 		<state readOnly="true" pattern="%.1f %unit%"/>
 	</channel-type>
 	<channel-type id="measurementtime">
 		<item-type>DateTime</item-type>
 		<label>@text/channelMeasurementTimeLabel</label>
 		<description>@text/channelMeasurementTimeDescription</description>
+		<tags>
+			<tag>Status</tag>
+			<tag>Timestamp</tag>
+		</tags>
 		<state readOnly="true"/>
 	</channel-type>
 
@@ -511,6 +727,10 @@
 		<label>@text/channelBellButtonLabel</label>
 		<description>@text/channelBellButtonDescription</description>
 		<category>Switch</category>
+		<tags>
+			<tag>Control</tag>
+			<tag>Mode</tag>
+		</tags>
 		<autoUpdatePolicy>veto</autoUpdatePolicy>
 	</channel-type>
 	<channel-type id="ringandcomein">
@@ -518,12 +738,20 @@
 		<label>@text/channelRingAndComeInLabel</label>
 		<description>@text/channelRingAndComeInDescription</description>
 		<category>Switch</category>
+		<tags>
+			<tag>Switch</tag>
+			<tag>Mode</tag>
+		</tags>
 	</channel-type>
 	<channel-type id="lock">
 		<item-type>Switch</item-type>
 		<label>@text/channelLockLabel</label>
 		<description>@text/channelLockDescription</description>
 		<category>Switch</category>
+		<tags>
+			<tag>Switch</tag>
+			<tag>LockState</tag>
+		</tags>
 		<autoUpdatePolicy>veto</autoUpdatePolicy>
 	</channel-type>
 
@@ -532,6 +760,10 @@
 		<label>@text/channelAlarmArmedLabel</label>
 		<description>@text/channelAlarmArmedDescription</description>
 		<category>Alarm</category>
+		<tags>
+			<tag>Switch</tag>
+			<tag>Mode</tag>
+		</tags>
 		<autoUpdatePolicy>veto</autoUpdatePolicy>
 	</channel-type>
 	<channel-type id="alarmstate">
@@ -539,6 +771,9 @@
 		<label>@text/channelAlarmStateLabel</label>
 		<description>@text/channelAlarmStateDescription</description>
 		<category>Alarm</category>
+		<tags>
+			<tag>Alarm</tag>
+		</tags>
 		<state readOnly="true">
 			<options>
 				<option value="DISARMED">@text/channelOptionAlarmStateDisarmed</option>
@@ -549,6 +784,119 @@
 				<option value="ALARM">@text/channelOptionAlarmStateAlarm</option>
 			</options>
 		</state>
+	</channel-type>
+
+	<channel-type id="chargingstatus">
+		<item-type>String</item-type>
+		<label>@text/channelChargingStatusLabel</label>
+		<description>@text/channelChargingStatusDescription</description>
+		<tags>
+			<tag>Status</tag>
+		</tags>
+		<state readOnly="true">
+			<options>
+				<option value="ACTIVE">@text/channelOptionChargingStatusActive</option>
+				<option value="INACTIVE">@text/channelOptionChargingStatusInactive</option>
+				<option value="BATTERY FULL">@text/channelOptionChargingStatusBatteryFull</option>
+				<option value="ERROR">@text/channelChargingStatusError</option>
+			</options>
+		</state>
+	</channel-type>
+	<channel-type id="evstatus">
+		<item-type>String</item-type>
+		<label>@text/channelEvStatusLabel</label>
+		<description>@text/channelEvStatusDescription</description>
+		<tags>
+			<tag>Status</tag>
+		</tags>
+		<state readOnly="true">
+			<options>
+				<option value="IDLE">@text/channelOptionEvStatusIdle</option>
+				<option value="CONNECTED">@text/channelOptionEvStatusConnected</option>
+				<option value="CHARGING">@text/channelOptionEvStatusCharging</option>
+			</options>
+		</state>
+	</channel-type>
+	<channel-type id="couplingstatus">
+		<item-type>String</item-type>
+		<label>@text/channelCouplingStatusLabel</label>
+		<description>@text/channelCouplingStatusDescription</description>
+		<tags>
+			<tag>Status</tag>
+		</tags>
+		<state readOnly="true">
+			<options>
+				<option value="OK">@text/channelOptionCouplingStatusOk</option>
+				<option value="NO INTERNET">@text/channelOptionCouplingStatusNoInternet</option>
+				<option value="NO CREDENTIALS">@text/channelOptionCouplingStatusNoCredentials</option>
+				<option value="INVALID CREDENTIALS">@text/channelOptionCouplingStatusInvalidCredentials</option>
+				<option value="CONNECTION ERROR">@text/channelOptionCouplingStatusConnectionError</option>
+				<option value="CONNECTION TIMEOUT">@text/channelOptionCouplingStatusConnectionTimeout</option>
+				<option value="API ERROR">@text/channelOptionCouplingStatusApiError</option>
+				<option value="UNKNOWN ERROR">@text/channelOptionCouplingStatusUnknownError</option>
+			</options>
+		</state>
+	</channel-type>
+	<channel-type id="chargingmode">
+		<item-type>String</item-type>
+		<label>@text/channelChargingModeLabel</label>
+		<description>@text/channelChargingModeDescription</description>
+		<tags>
+			<tag>Control</tag>
+		</tags>
+		<state>
+			<options>
+				<option value="SOLAR">@text/channelOptionChargingModeSolar</option>
+				<option value="NORMAL">@text/channelOptionChargingModeNormal</option>
+				<option value="SMART">@text/channelOptionChargingModeSmart</option>
+			</options>
+		</state>
+	</channel-type>
+	<channel-type id="targetdistance">
+		<item-type unitHint="km">Number:Length</item-type>
+		<label>@text/channelTargetDistanceLabel</label>
+		<description>@text/channelTargetDistanceDescription</description>
+		<tags>
+			<tag>Setpoint</tag>
+		</tags>
+		<state pattern="%d %unit%"/>
+	</channel-type>
+	<channel-type id="targettime">
+		<item-type>DateTime</item-type>
+		<label>@text/channelTargetTimeLabel</label>
+		<description>@text/channelTargetTimeDescription</description>
+		<tags>
+			<tag>Setpoint</tag>
+			<tag>Timestamp</tag>
+		</tags>
+		<state pattern="%tR"/>
+	</channel-type>
+	<channel-type id="boost">
+		<item-type>Switch</item-type>
+		<label>@text/channelBoostLabel</label>
+		<description>@text/channelBoostDescription</description>
+		<tags>
+			<tag>Switch</tag>
+		</tags>
+	</channel-type>
+	<channel-type id="reachabledistance">
+		<item-type unitHint="km">Number:Length</item-type>
+		<label>@text/channelReachableDistanceLabel</label>
+		<description>@text/channelReachableDistanceDescription</description>
+		<tags>
+			<tag>Calculation</tag>
+		</tags>
+		<state pattern="%d %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="nextchargingtime">
+		<item-type>DateTime</item-type>
+		<label>@text/channelNextChargingTimeLabel</label>
+		<description>@text/channelNextChargingTimeDescription</description>
+		<tags>
+			<tag>Calculation</tag>
+			<tag>Timestamp</tag>
+		</tags>
+		<state pattern="%tR" readOnly="true"/>
 	</channel-type>
 
 	<channel-type id="alarm">

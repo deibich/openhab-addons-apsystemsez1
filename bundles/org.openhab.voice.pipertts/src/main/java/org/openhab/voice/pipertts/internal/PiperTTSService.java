@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2010-2024 Contributors to the openHAB project
+/*
+ * Copyright (c) 2010-2025 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -21,7 +21,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
+import java.net.URI;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.file.Files;
@@ -87,7 +87,7 @@ import io.github.givimad.piperjni.PiperVoice;
         + " Text-to-Speech", description_uri = SERVICE_CATEGORY + ":" + SERVICE_ID)
 public class PiperTTSService extends AbstractCachedTTSService {
     // piper-jni version from pom.xml
-    private static final String PIPER_VERSION = "1.2.0-a0f09cd";
+    private static final String PIPER_VERSION = "1.2.0-c0670df";
     private static final Path PIPER_FOLDER = Path.of(OpenHAB.getUserDataFolder(), "piper");
     private static final Path LIB_FOLDER = PIPER_FOLDER.resolve("lib-" + PIPER_VERSION);
     private static final Path JAR_FILE = PIPER_FOLDER.resolve("piper-jni-" + PIPER_VERSION + ".jar");
@@ -166,7 +166,7 @@ public class PiperTTSService extends AbstractCachedTTSService {
         }
         if (!Files.exists(JAR_FILE)) {
             logger.debug("Downloading file: {}", JAR_URL);
-            InputStream in = new URL(JAR_URL).openStream();
+            InputStream in = URI.create(JAR_URL).toURL().openStream();
             Files.copy(in, JAR_FILE, StandardCopyOption.REPLACE_EXISTING);
         }
         try (java.util.jar.JarFile jar = new java.util.jar.JarFile(JAR_FILE.toFile())) {

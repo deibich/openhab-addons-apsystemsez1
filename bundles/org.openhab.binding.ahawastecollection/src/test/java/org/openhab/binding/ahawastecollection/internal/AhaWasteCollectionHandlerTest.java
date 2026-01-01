@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2010-2024 Contributors to the openHAB project
+/*
+ * Copyright (c) 2010-2025 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -15,8 +15,6 @@ package org.openhab.binding.ahawastecollection.internal;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Map;
@@ -113,10 +111,12 @@ public class AhaWasteCollectionHandlerTest {
                 AhaWasteCollectionBindingConstants.GENERAL_WASTE);
         final Channel channelPaper = mockChannel(thing.getUID(), AhaWasteCollectionBindingConstants.PAPER);
         final Channel channelLightweightPackaging = mockChannel(thing.getUID(),
-                AhaWasteCollectionBindingConstants.LEIGHTWEIGHT_PACKAGING);
+                AhaWasteCollectionBindingConstants.LIGHTWEIGHT_PACKAGING);
+        final Channel channelChristmasTree = mockChannel(thing.getUID(),
+                AhaWasteCollectionBindingConstants.CHRISTMAS_TREE);
 
-        when(thing.getChannels()).thenReturn(
-                Arrays.asList(channelBioWaste, channelGeneralWaste, channelLightweightPackaging, channelPaper));
+        when(thing.getChannels()).thenReturn(Arrays.asList(channelBioWaste, channelGeneralWaste,
+                channelLightweightPackaging, channelPaper, channelChristmasTree));
         return thing;
     }
 
@@ -136,15 +136,14 @@ public class AhaWasteCollectionHandlerTest {
         }).when(executorStub).execute(any(Runnable.class));
 
         final AhaWasteCollectionHandler handler = new AhaWasteCollectionHandler(thing, createStubScheduler(),
-                ZoneId::systemDefault, new AhaCollectionScheduleStubFactory(), executorStub);
+                new AhaCollectionScheduleStubFactory(), executorStub);
         handler.setCallback(callback);
         handler.initialize();
         return handler;
     }
 
     private static State getDateTime(final Date day) {
-        final ZonedDateTime zonedDateTime = ZonedDateTime.ofInstant(day.toInstant(), ZoneId.systemDefault());
-        return new DateTimeType(zonedDateTime);
+        return new DateTimeType(day.toInstant());
     }
 
     @Test
@@ -162,10 +161,13 @@ public class AhaWasteCollectionHandlerTest {
                     new ChannelUID(thing.getUID(), AhaWasteCollectionBindingConstants.GENERAL_WASTE),
                     getDateTime(AhaCollectionScheduleStub.GENERAL_WASTE_DATE));
             verify(callback).stateUpdated(
-                    new ChannelUID(thing.getUID(), AhaWasteCollectionBindingConstants.LEIGHTWEIGHT_PACKAGING),
-                    getDateTime(AhaCollectionScheduleStub.LEIGHTWEIGHT_PACKAGING_DATE));
+                    new ChannelUID(thing.getUID(), AhaWasteCollectionBindingConstants.LIGHTWEIGHT_PACKAGING),
+                    getDateTime(AhaCollectionScheduleStub.LIGHTWEIGHT_PACKAGING_DATE));
             verify(callback).stateUpdated(new ChannelUID(thing.getUID(), AhaWasteCollectionBindingConstants.PAPER),
                     getDateTime(AhaCollectionScheduleStub.PAPER_DATE));
+            verify(callback).stateUpdated(
+                    new ChannelUID(thing.getUID(), AhaWasteCollectionBindingConstants.CHRISTMAS_TREE),
+                    getDateTime(AhaCollectionScheduleStub.CHRISTMAS_TREE_DATE));
         } finally {
             handler.dispose();
         }

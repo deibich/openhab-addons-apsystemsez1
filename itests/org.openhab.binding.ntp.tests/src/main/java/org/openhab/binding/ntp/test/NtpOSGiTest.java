@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2010-2024 Contributors to the openHAB project
+/*
+ * Copyright (c) 2010-2025 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -19,7 +19,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import java.time.ZoneId;
-import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
@@ -30,8 +29,9 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.mockito.ArgumentMatchers;
 import org.openhab.binding.ntp.internal.NtpBindingConstants;
 import org.openhab.binding.ntp.internal.handler.NtpHandler;
@@ -78,6 +78,7 @@ import org.openhab.core.types.State;
  * @author Markus Rathgeb - Migrated tests from Groovy to pure Java
  * @author Erdoan Hadzhiyusein - Migrated tests to Java 8 and integrated the new DateTimeType
  */
+@Execution(ExecutionMode.SAME_THREAD)
 public class NtpOSGiTest extends JavaOSGiTest {
     private static TimeZone systemTimeZone;
     private static Locale locale;
@@ -125,6 +126,7 @@ public class NtpOSGiTest extends JavaOSGiTest {
     }
 
     @BeforeAll
+    @SuppressWarnings({ "PMD.SetDefaultTimeZone", "PMD.SetDefaultLocale" })
     public static void setUpClass() {
         // Initializing a new local server on this port
         timeServer = new SimpleNTPServer(TEST_PORT);
@@ -180,6 +182,7 @@ public class NtpOSGiTest extends JavaOSGiTest {
     }
 
     @AfterAll
+    @SuppressWarnings({ "PMD.SetDefaultTimeZone", "PMD.SetDefaultLocale" })
     public static void tearDownClass() {
         // Stopping the local time server
         timeServer.stopServer();
@@ -210,35 +213,6 @@ public class NtpOSGiTest extends JavaOSGiTest {
     }
 
     @Test
-    public void testDateTimeChannelTimeZoneUpdate() {
-        Configuration configuration = new Configuration();
-        configuration.put(NtpBindingConstants.PROPERTY_TIMEZONE, TEST_TIME_ZONE_ID);
-        initialize(configuration, NtpBindingConstants.CHANNEL_DATE_TIME, ACCEPTED_ITEM_TYPE_DATE_TIME, null, null);
-
-        String testItemState = getItemState(ACCEPTED_ITEM_TYPE_DATE_TIME).toString();
-        assertFormat(testItemState, DateTimeType.DATE_PATTERN_WITH_TZ_AND_MS);
-        ZonedDateTime timeZoneFromItemRegistry = ((DateTimeType) getItemState(ACCEPTED_ITEM_TYPE_DATE_TIME))
-                .getZonedDateTime();
-
-        ZoneOffset expectedOffset = ZoneId.of(TEST_TIME_ZONE_ID).getRules()
-                .getOffset(timeZoneFromItemRegistry.toInstant());
-        assertEquals(expectedOffset, timeZoneFromItemRegistry.getOffset());
-    }
-
-    @Test
-    public void testDateTimeChannelCalendarTimeZoneUpdate() {
-        Configuration configuration = new Configuration();
-        configuration.put(NtpBindingConstants.PROPERTY_TIMEZONE, TEST_TIME_ZONE_ID);
-        initialize(configuration, NtpBindingConstants.CHANNEL_DATE_TIME, ACCEPTED_ITEM_TYPE_DATE_TIME, null, null);
-        ZonedDateTime timeZoneIdFromItemRegistry = ((DateTimeType) getItemState(ACCEPTED_ITEM_TYPE_DATE_TIME))
-                .getZonedDateTime();
-
-        ZoneOffset expectedOffset = ZoneId.of(TEST_TIME_ZONE_ID).getRules()
-                .getOffset(timeZoneIdFromItemRegistry.toInstant());
-        assertEquals(expectedOffset, timeZoneIdFromItemRegistry.getOffset());
-    }
-
-    @Test
     public void testStringChannelDefaultTimeZoneUpdate() {
         final String expectedTimeZoneEEST = "EEST";
         final String expectedTimeZoneEET = "EET";
@@ -257,36 +231,6 @@ public class NtpOSGiTest extends JavaOSGiTest {
         String timeZoneFromItemRegistry = getStringChannelTimeZoneFromItemRegistry();
 
         assertThat(timeZoneFromItemRegistry, is(anyOf(equalTo(expectedTimeZoneEEST), equalTo(expectedTimeZoneEET))));
-    }
-
-    @Test
-    public void testDateTimeChannelDefaultTimeZoneUpdate() {
-        ZonedDateTime zoned = ZonedDateTime.now();
-
-        ZoneOffset expectedTimeZone = zoned.getOffset();
-        Configuration configuration = new Configuration();
-        // Initialize with configuration with no time zone property set.
-        initialize(configuration, NtpBindingConstants.CHANNEL_DATE_TIME, ACCEPTED_ITEM_TYPE_DATE_TIME, null, null);
-
-        String testItemState = getItemState(ACCEPTED_ITEM_TYPE_DATE_TIME).toString();
-        assertFormat(testItemState, DateTimeType.DATE_PATTERN_WITH_TZ_AND_MS);
-        ZoneOffset timeZoneFromItemRegistry = new DateTimeType(testItemState).getZonedDateTime().getOffset();
-
-        assertEquals(expectedTimeZone, timeZoneFromItemRegistry);
-    }
-
-    @Test
-    @Disabled("https://github.com/eclipse/smarthome/issues/5224")
-    public void testDateTimeChannelCalendarDefaultTimeZoneUpdate() {
-        Configuration configuration = new Configuration();
-        // Initialize with configuration with no time zone property set.
-        initialize(configuration, NtpBindingConstants.CHANNEL_DATE_TIME, ACCEPTED_ITEM_TYPE_DATE_TIME, null, null);
-
-        ZonedDateTime timeZoneIdFromItemRegistry = ((DateTimeType) getItemState(ACCEPTED_ITEM_TYPE_DATE_TIME))
-                .getZonedDateTime();
-
-        ZoneOffset expectedOffset = ZoneId.systemDefault().getRules().getOffset(timeZoneIdFromItemRegistry.toInstant());
-        assertEquals(expectedOffset, timeZoneIdFromItemRegistry.getOffset());
     }
 
     @Test

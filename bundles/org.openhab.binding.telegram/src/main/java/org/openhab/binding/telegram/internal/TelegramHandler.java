@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2010-2024 Contributors to the openHAB project
+/*
+ * Copyright (c) 2010-2025 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -156,7 +156,8 @@ public class TelegramHandler extends BaseThingHandler {
             try {
                 parseMode = ParseMode.valueOf(parseModeAsString);
             } catch (IllegalArgumentException e) {
-                logger.warn("parseMode is invalid and will be ignored. Only Markdown or HTML are allowed values");
+                logger.warn(
+                        "parseMode is invalid and will be ignored. Only Markdown, MarkdownV2 or HTML are allowed values");
             }
         }
 
@@ -186,8 +187,11 @@ public class TelegramHandler extends BaseThingHandler {
         updateStatus(ThingStatus.UNKNOWN);
         delayThingOnlineStatus();
         TelegramBot localBot = bot = new TelegramBot.Builder(botToken).okHttpClient(botLibClient).build();
-        localBot.setUpdatesListener(this::handleUpdates, this::handleExceptions,
-                getGetUpdatesRequest(config.getLongPollingTime()));
+        int longPollingTime = config.getLongPollingTime();
+        if (longPollingTime > 0) {
+            localBot.setUpdatesListener(this::handleUpdates, this::handleExceptions,
+                    getGetUpdatesRequest(longPollingTime));
+        }
     }
 
     private void createReceiverChatIdsAndAuthorizedSenderChatIds(List<String> chatIds) {
@@ -232,6 +236,12 @@ public class TelegramHandler extends BaseThingHandler {
                         }
                         updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
                                 "Unauthorized attempt to connect to the Telegram server, please check if the bot token is valid");
+                        return;
+                    case 429:
+                        cancelThingOnlineStatusJob();
+                        updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
+                                "Too Many Requests; temporarily delaying reconnection.");
+                        delayThingOnlineStatus();
                         return;
                     case 502:
                         cancelThingOnlineStatusJob();
@@ -391,26 +401,26 @@ public class TelegramHandler extends BaseThingHandler {
                         lastMessageUsername = message.from().username();
                     }
                 }
-            } else if (callbackQuery != null && callbackQuery.message() != null
-                    && callbackQuery.message().text() != null) {
+            } else if (callbackQuery != null && callbackQuery.maybeInaccessibleMessage() instanceof Message cbMessage
+                    && cbMessage.text() != null) {
                 String[] callbackData = callbackQuery.data().split(" ", 2);
 
                 if (callbackData.length == 2) {
                     replyId = callbackData[0];
                     lastMessageText = callbackData[1];
-                    lastMessageDate = callbackQuery.message().date();
+                    lastMessageDate = cbMessage.date();
                     lastMessageFirstName = callbackQuery.from().firstName();
                     lastMessageLastName = callbackQuery.from().lastName();
                     lastMessageUsername = callbackQuery.from().username();
-                    chatId = callbackQuery.message().chat().id();
+                    chatId = cbMessage.chat().id();
                     replyIdToCallbackId.put(new ReplyKey(chatId, replyId), callbackQuery.id());
 
                     // build and publish callbackEvent trigger channel payload
                     JsonObject callbackRaw = JsonParser.parseString(gson.toJson(callbackQuery)).getAsJsonObject();
                     JsonObject callbackPayload = new JsonObject();
-                    callbackPayload.addProperty("message_id", callbackQuery.message().messageId());
+                    callbackPayload.addProperty("message_id", cbMessage.messageId());
                     callbackPayload.addProperty("from", lastMessageFirstName + " " + lastMessageLastName);
-                    callbackPayload.addProperty("chat_id", callbackQuery.message().chat().id());
+                    callbackPayload.addProperty("chat_id", cbMessage.chat().id());
                     callbackPayload.addProperty("callback_id", callbackQuery.id());
                     callbackPayload.addProperty("reply_id", callbackData[0]);
                     callbackPayload.addProperty("text", callbackData[1]);
@@ -464,7 +474,10 @@ public class TelegramHandler extends BaseThingHandler {
         OkHttpClient localClient = botLibClient;
         TelegramBot localBot = bot;
         if (localClient != null && localBot != null) {
-            localBot.removeGetUpdatesListener();
+            TelegramConfiguration config = this.getConfig().as(TelegramConfiguration.class);
+            if (config.getLongPollingTime() > 0) {
+                localBot.removeGetUpdatesListener();
+            }
             localClient.dispatcher().executorService().shutdown();
             localClient.connectionPool().evictAll();
             logger.debug("Telegram client closed");

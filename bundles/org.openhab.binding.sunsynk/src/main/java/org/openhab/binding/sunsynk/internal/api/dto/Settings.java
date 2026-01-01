@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2010-2024 Contributors to the openHAB project
+/*
+ * Copyright (c) 2010-2025 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -10,7 +10,6 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-
 package org.openhab.binding.sunsynk.internal.api.dto;
 
 import java.util.ArrayList;
@@ -23,7 +22,7 @@ import com.google.gson.Gson;
 
 /**
  * The {@link Settings} is the internal class for inverter common settings information
- * (grid and solar charge / battery discharge schedule) from a Sun Synk Account.
+ * (grid and solar charge / battery discharge schedule) from Sun Synk Connect.
  * 
  * 
  * @author Lee Charlton - Initial contribution
@@ -398,6 +397,14 @@ public class Settings {
                 this.data.sellTime4Pac, this.data.sellTime5Pac, this.data.sellTime6Pac);
     }
 
+    public int getCode() {
+        return this.code;
+    }
+
+    public String getMsg() {
+        return this.msg;
+    }
+
     public String getsn() {
         return this.data.sn;
     }
@@ -439,7 +446,7 @@ public class Settings {
     }
 
     public String toString() {
-        return "Content [code=" + code + ", msg=" + msg + "sucess=" + success + ", data=" + data + "]";
+        return "Content [code=" + code + ", msg=" + msg + "success=" + success + ", data=" + data + "]";
     }
 
     public void setIntervalGridTimerOn(Boolean state, int interval) {

@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2010-2024 Contributors to the openHAB project
+/*
+ * Copyright (c) 2010-2025 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -263,11 +263,9 @@ public class LegacyDevice {
                 mrequestQueue.add(qe);
             }
         }
-        LegacyRequestManager instance = LegacyRequestManager.instance();
-        if (instance != null) {
-            instance.addQueue(this, now + delay);
-        } else {
-            logger.warn("request queue manager is null");
+        LegacyDriver driver = this.driver;
+        if (driver != null) {
+            driver.getRequestManager().addQueue(this, now + delay);
         }
 
         if (!list.isEmpty()) {
@@ -336,7 +334,7 @@ public class LegacyDevice {
             if (qe == null) {
                 return 0L;
             }
-            if (!qe.getMsg().isBroadcast()) {
+            if (!qe.getMsg().isAllLinkBroadcast()) {
                 logger.debug("qe taken off direct: {} {}", qe.getFeature(), qe.getMsg());
                 lastQueryTime = timeNow;
                 // mark feature as pending
@@ -377,22 +375,20 @@ public class LegacyDevice {
      *
      * @param msg message to be sent
      * @param feature device feature that sent this message (so we can associate the response message with it)
-     * @param delay time (in milliseconds) to delay before enqueuing message
+     * @param delay delay (in milliseconds) before enqueuing message
      */
     public void enqueueDelayedMessage(Msg msg, LegacyDeviceFeature feature, long delay) {
         long now = System.currentTimeMillis();
         synchronized (mrequestQueue) {
             mrequestQueue.add(new QEntry(feature, msg, now + delay));
         }
-        if (!msg.isBroadcast()) {
+        if (!msg.isAllLinkBroadcast()) {
             msg.setQuietTime(QUIET_TIME_DIRECT_MESSAGE);
         }
         logger.trace("enqueing direct message with delay {}", delay);
-        LegacyRequestManager instance = LegacyRequestManager.instance();
-        if (instance != null) {
-            instance.addQueue(this, now + delay);
-        } else {
-            logger.warn("request queue manger instance is null");
+        LegacyDriver driver = this.driver;
+        if (driver != null) {
+            driver.getRequestManager().addQueue(this, now + delay);
         }
     }
 
@@ -523,7 +519,7 @@ public class LegacyDevice {
 
         @Override
         public int compareTo(QEntry qe) {
-            return (int) (expirationTime - qe.expirationTime);
+            return Long.compare(expirationTime, qe.expirationTime);
         }
     }
 }

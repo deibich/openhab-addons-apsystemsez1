@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2010-2024 Contributors to the openHAB project
+/*
+ * Copyright (c) 2010-2025 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -67,12 +67,12 @@ import org.openhab.core.util.HexUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import tuwien.auto.calimero.GroupAddress;
-import tuwien.auto.calimero.IndividualAddress;
-import tuwien.auto.calimero.KNXException;
-import tuwien.auto.calimero.KNXFormatException;
-import tuwien.auto.calimero.datapoint.CommandDP;
-import tuwien.auto.calimero.datapoint.Datapoint;
+import io.calimero.GroupAddress;
+import io.calimero.IndividualAddress;
+import io.calimero.KNXException;
+import io.calimero.KNXFormatException;
+import io.calimero.datapoint.CommandDP;
+import io.calimero.datapoint.Datapoint;
 
 /**
  * The {@link DeviceThingHandler} is responsible for handling commands and state updates sent to and received from the
@@ -131,7 +131,7 @@ public class DeviceThingHandler extends BaseThingHandler implements GroupAddress
                     continue;
                 }
 
-                String dpt = inboundSpecs.get(0).getDPT(); // there can be only one DPT on number channels
+                String dpt = inboundSpecs.getFirst().getDPT(); // there can be only one DPT on number channels
                 Unit<?> unit = UnitUtils.parseUnit(DPTUnits.getUnitForDpt(dpt));
                 String dimension = unit == null ? null : UnitUtils.getDimensionName(unit);
                 String expectedItemType = dimension == null ? "Number" : "Number:" + dimension; // unknown dimension ->

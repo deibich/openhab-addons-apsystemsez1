@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2010-2024 Contributors to the openHAB project
+/*
+ * Copyright (c) 2010-2025 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -39,7 +39,7 @@ public class X10Address implements DeviceAddress {
     private final byte unitCode;
 
     public X10Address(byte address) {
-        this.houseCode = (byte) (address >> 4);
+        this.houseCode = (byte) (address >> 4 & 0x0F);
         this.unitCode = (byte) (address & 0x0F);
     }
 
@@ -49,7 +49,7 @@ public class X10Address implements DeviceAddress {
     }
 
     public X10Address(String address) throws IllegalArgumentException {
-        String[] parts = address.replace(".", "").split("");
+        String[] parts = address.replace(".", "").split("", 2);
         if (parts.length != 2) {
             throw new IllegalArgumentException("Invalid X10 address format");
         }
@@ -163,8 +163,8 @@ public class X10Address implements DeviceAddress {
      * @return unit code as integer if found, otherwise -1
      */
     public static int unitCodeToInt(byte code) {
-        return UNIT_CODES.entrySet().stream().filter(entry -> entry.getValue() == code).map(Entry::getKey).findFirst()
-                .orElse(-1);
+        return UNIT_CODES.entrySet().stream().filter(entry -> entry.getValue() == code).mapToInt(Entry::getKey)
+                .findFirst().orElse(-1);
     }
 
     /**

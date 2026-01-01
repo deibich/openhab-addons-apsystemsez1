@@ -1,4 +1,3 @@
-
 # Velux Binding
 
 This binding integrates the <B>Velux</B> devices with help of a gateway, the <B>Velux Bridge KLF200</B>, which is able to control 200 actuators.
@@ -258,8 +257,8 @@ The bridge Thing provides the following properties.
 | scenes            | List of all defined scenes                                      |
 | subnetMask        | IP subnetmask of the Bridge                                     |
 | vendor            | Vendor name                                                     |
-| WLANSSID          | Name of the wireless network (not suported any more)            |
-| WLANPassword      | WLAN Authentication Password (not suported any more)            |
+| WLANSSID          | Name of the wireless network (not supported any more)           |
+| WLANPassword      | WLAN Authentication Password (not supported any more)           |
 
 ## Full Example
 

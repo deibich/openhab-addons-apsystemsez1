@@ -4,12 +4,12 @@ This binding integrates the [Keba KeContact EV Charging Stations](https://www.ke
 
 ## Supported Things
 
-The Keba KeContact P20 and P30 stations which are providing the UDP interface (P20 LSA+ socket, P30 c-series and x-series or BMW wallbox) are supported by this binding, the thing type id is `kecontact`.
+The Keba KeContact P20 and P30 stations which are providing the UDP interface (P20 LSA+ socket, P30 c-series and x-series or BMW wallbox) are supported by this binding, the Thing type id is `kecontact`.
 
 ## Thing Configuration
 
 The Keba KeContact P20/30 requires the IP address as the configuration parameter `ipAddress`.
-Optionally, a refresh interval (in seconds) can be defined as parameter `refreshInterval` that defines the polling of values from the charging station.
+Optionally, a refresh interval (in seconds) can be defined as the parameter `refreshInterval` that defines the polling interval for values from the charging station.
 
 ## Channels
 
@@ -47,6 +47,30 @@ All devices support the following channels:
 | authenticate            | String                   | no        | authenticate and start a session using RFID tag+RFID class              |
 | maxpilotcurrent         | Number:ElectricCurrent   | yes       | current offered to the vehicle via control pilot signalization          |
 | maxpilotcurrentdutycyle | Number:Dimensionless     | yes       | duty cycle of the control pilot signal                                  |
+
+## Rule Actions
+
+Certain Keba models support setting the text on the built-in display.
+The text can be set via a rule action `setDisplay`. It comes in two variants:
+
+```java
+rule "Set Display Text"
+when
+  System reached start level 100
+then
+   val keContactActions = getActions("keba", "keba:kecontact:1")
+   // Default duration
+   keContactActions.setDisplay("TEXT$1")
+   // Explicit duration set
+   keContactActions.setDisplay("TEXT$2", 5, 10)
+end
+```
+
+| Parameter                | Description                                                                                                                                                                      |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| text                     | Text shown on the display. Maximum 23 ASCII characters can be used. `~` == Σ, `$` == blank, `,` == comma                                                                         |
+| durationMin _(optional)_ | Defines the duration in seconds how long the text will be displayed before another display command will be processed (internal MID metering relevant information may overrule this) |
+| durationMax _(optional)_ | Defines the duration in seconds how long the text will be displayed if no additional display command follows.                                                                    |
 
 ## Example
 

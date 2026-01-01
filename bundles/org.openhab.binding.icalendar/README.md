@@ -6,17 +6,18 @@ Furthermore it is possible to embed `command tags` in the calendar event descrip
 
 ## Supported Things
 
-The primary thing type is the calendar.
+The primary Thing type is the calendar.
 It is based on a single iCalendar file and implemented as bridge.
 There can be multiple things having different properties representing different calendars.
 
-Each calendar can have event filters which allow to get multiple events, maybe filtered by additional criteria. Time based filtering is done by each event's start.
+Each calendar can have event filters which allow to get multiple events, maybe filtered by additional criteria.
+Standard time-based filtering is done by each event's start, but it can also be configured to match other aspects.
 
 ## Thing Configuration
 
 ### Configuration for `calendar`
 
-Each `calendar` thing requires the following configuration parameters:
+Each `calendar` Thing requires the following configuration parameters:
 
 | parameter name      | description                                                                                                                                                                               | optional                      |
 |---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------|
@@ -30,7 +31,7 @@ Each `calendar` thing requires the following configuration parameters:
 
 ### Configuration for `eventfilter`
 
-Each `eventfilter` thing requires a bridge of type `calendar` and has following configuration options:
+Each `eventfilter` Thing requires a bridge of type `calendar` and has following configuration options:
 
 | parameter name   | description                                                                                                                                                                                    | optional                                   |
 |------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------|
@@ -40,6 +41,7 @@ Each `eventfilter` thing requires a bridge of type `calendar` and has following 
 | `datetimeStart`  | The start of the time frame where to search for events relative to current time. Combined with `datetimeUnit`.                                                                                 | optional                                   |
 | `datetimeEnd`    | The end of the time frame where to search for events relative to current time. Combined with `datetimeUnit`. The value must be greater than `datetimeStart` to get results.                    | optional                                   |
 | `datetimeRound`  | Whether to round the datetimes of start and end down to the earlier time unit. Example if set: current time is 13:00, timeunit is set to `DAY`. Resulting search will start and end at 0:00.   | optional                                   |
+| `datetimeMode`   | Defines which part of an event must fall within the search period between start and end. Valid values: `START`, `ACTIVE` and `END`.                                                            | optional (default is `START`)              |
 | `textEventField` | A field to filter the events text-based. Valid values: `SUMMARY`, `DESCRIPTION`, `COMMENT`, `CONTACT` and `LOCATION` (as described in RFC 5545).                                               | optional/required for text-based filtering |
 | `textEventValue` | The text to filter events with.                                                                                                                                                                | optional                                   |
 | `textValueType`  | The type of the text to filter with. Valid values: `TEXT` (field must contain value, case insensitive), `REGEX` (field must match value, completely, dot matches all, usually case sensitive). | optional/required for text-based filtering |
@@ -113,13 +115,13 @@ See openHAB Core definitions for [command types](https://www.openhab.org/docs/co
 
 The `Authorization_Code` may _optionally_ be used as follows:
 
-- When the thing configuration parameter `authorizationCode` is not blank, the binding will compare the `Authorization_Code` field against the `authorizationCode` configuration parameter, and it will only execute the command if the two strings are the same.
+- When the Thing configuration parameter `authorizationCode` is not blank, the binding will compare the `Authorization_Code` field against the `authorizationCode` configuration parameter, and it will only execute the command if the two strings are the same.
 
-- When the thing configuration parameter `authorizationCode` is blank, the binding will NOT check this `Authorization_Code` field, and so it will always execute the command.
+- When the Thing configuration parameter `authorizationCode` is blank, the binding will NOT check this `Authorization_Code` field, and so it will always execute the command.
 
 ## Full Example
 
-All required information must be provided in the thing definition, either via UI or in the `.things` file..
+All required information must be provided in the Thing definition, either via UI or in the `.things` file..
 
 ```java
 Bridge icalendar:calendar:deadbeef    "My calendar" @ "Internet" [ url="http://example.org/calendar.ical", refreshTime=60 ]

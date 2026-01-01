@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2010-2024 Contributors to the openHAB project
+/*
+ * Copyright (c) 2010-2025 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -44,12 +44,13 @@ import org.openhab.binding.energidataservice.internal.action.EnergiDataServiceAc
 import org.openhab.binding.energidataservice.internal.api.ChargeType;
 import org.openhab.binding.energidataservice.internal.api.ChargeTypeCode;
 import org.openhab.binding.energidataservice.internal.api.DatahubTariffFilter;
-import org.openhab.binding.energidataservice.internal.api.DatahubTariffFilterFactory;
 import org.openhab.binding.energidataservice.internal.api.DateQueryParameter;
 import org.openhab.binding.energidataservice.internal.api.DateQueryParameterType;
 import org.openhab.binding.energidataservice.internal.api.GlobalLocationNumber;
 import org.openhab.binding.energidataservice.internal.api.dto.DatahubPricelistRecord;
+import org.openhab.binding.energidataservice.internal.api.dto.DayAheadPriceRecord;
 import org.openhab.binding.energidataservice.internal.api.dto.ElspotpriceRecord;
+import org.openhab.binding.energidataservice.internal.api.filter.DatahubTariffFilterFactory;
 import org.openhab.binding.energidataservice.internal.config.DatahubPriceConfiguration;
 import org.openhab.binding.energidataservice.internal.config.EnergiDataServiceConfiguration;
 import org.openhab.binding.energidataservice.internal.exception.DataServiceException;
@@ -101,18 +102,21 @@ public class EnergiDataServiceHandler extends BaseThingHandler
     private final ApiController apiController;
     private final ElectricityPriceProvider electricityPriceProvider;
     private final Co2EmissionProvider co2EmissionProvider;
+    private final DatahubTariffFilterFactory datahubTariffFilterFactory;
     private final Set<Subscription> activeSubscriptions = new HashSet<>();
 
     private EnergiDataServiceConfiguration config;
 
     public EnergiDataServiceHandler(final Thing thing, final HttpClient httpClient,
             final TimeZoneProvider timeZoneProvider, final ElectricityPriceProvider electricityPriceProvider,
-            final Co2EmissionProvider co2EmissionProvider) {
+            final Co2EmissionProvider co2EmissionProvider,
+            final DatahubTariffFilterFactory datahubTariffFilterFactory) {
         super(thing);
         this.timeZoneProvider = timeZoneProvider;
         this.apiController = new ApiController(httpClient, timeZoneProvider);
         this.electricityPriceProvider = electricityPriceProvider;
         this.co2EmissionProvider = co2EmissionProvider;
+        this.datahubTariffFilterFactory = datahubTariffFilterFactory;
 
         // Default configuration
         this.config = new EnergiDataServiceConfiguration();
@@ -126,11 +130,7 @@ public class EnergiDataServiceHandler extends BaseThingHandler
 
         String channelId = channelUID.getId();
         if (ELECTRICITY_CHANNELS.contains(channelId)) {
-            if (!electricityPriceProvider.forceRefreshPrices(getChannelSubscription(channelId))) {
-                // All subscriptions are automatically notified upon actual changes after download.
-                // If cached values are the same, we will update the requested channel directly.
-                updateChannelFromCache(getChannelSubscription(channelId), channelId);
-            }
+            updateChannelFromCache(getChannelSubscription(channelId), channelId);
         } else if (CO2_EMISSION_CHANNELS.contains(channelId)) {
             Subscription subscription = getChannelSubscription(channelId);
             unsubscribe(subscription);
@@ -376,21 +376,21 @@ public class EnergiDataServiceHandler extends BaseThingHandler
     private DatahubTariffFilter getGridTariffFilter() {
         Channel channel = getThing().getChannel(CHANNEL_GRID_TARIFF);
         if (channel == null) {
-            return DatahubTariffFilterFactory.getGridTariffByGLN(config.gridCompanyGLN);
+            return datahubTariffFilterFactory.getGridTariffByGLN(config.gridCompanyGLN);
         }
 
         DatahubPriceConfiguration datahubPriceConfiguration = channel.getConfiguration()
                 .as(DatahubPriceConfiguration.class);
 
         if (!datahubPriceConfiguration.hasAnyFilterOverrides()) {
-            return DatahubTariffFilterFactory.getGridTariffByGLN(config.gridCompanyGLN);
+            return datahubTariffFilterFactory.getGridTariffByGLN(config.gridCompanyGLN);
         }
 
         DateQueryParameter start = datahubPriceConfiguration.getStart();
         if (start == null) {
             logger.warn("Invalid channel configuration parameter 'start' or 'offset': {} (offset: {})",
                     datahubPriceConfiguration.start, datahubPriceConfiguration.offset);
-            return DatahubTariffFilterFactory.getGridTariffByGLN(config.gridCompanyGLN);
+            return datahubTariffFilterFactory.getGridTariffByGLN(config.gridCompanyGLN);
         }
 
         Set<ChargeTypeCode> chargeTypeCodes = datahubPriceConfiguration.getChargeTypeCodes();
@@ -401,7 +401,7 @@ public class EnergiDataServiceHandler extends BaseThingHandler
             filter = new DatahubTariffFilter(chargeTypeCodes, notes, start);
         } else {
             // Only override start date in pre-configured filter.
-            filter = new DatahubTariffFilter(DatahubTariffFilterFactory.getGridTariffByGLN(config.gridCompanyGLN),
+            filter = new DatahubTariffFilter(datahubTariffFilterFactory.getGridTariffByGLN(config.gridCompanyGLN),
                     start);
         }
 
@@ -443,21 +443,44 @@ public class EnergiDataServiceHandler extends BaseThingHandler
         Map<String, String> properties = editProperties();
         try {
             Currency currency = config.getCurrency();
-            ElspotpriceRecord[] spotPriceRecords = apiController.getSpotPrices(config.priceArea, currency,
-                    DateQueryParameter.of(startDate), DateQueryParameter.of(endDate.plusDays(1)), properties);
             boolean isDKK = CURRENCY_DKK.equals(currency);
             TimeSeries spotPriceTimeSeries = new TimeSeries(REPLACE);
-            if (spotPriceRecords.length == 0) {
-                return 0;
+            LocalDate dayAheadFirstDate = DAY_AHEAD_TRANSITION_DATE.plusDays(1);
+
+            if (startDate.isBefore(dayAheadFirstDate)) {
+                ElspotpriceRecord[] spotPriceRecords = apiController.getSpotPrices(config.priceArea, currency,
+                        DateQueryParameter.of(startDate),
+                        DateQueryParameter
+                                .of((endDate.isBefore(dayAheadFirstDate) ? endDate.plusDays(1) : dayAheadFirstDate)),
+                        properties);
+                for (ElspotpriceRecord record : Arrays.stream(spotPriceRecords)
+                        .sorted(Comparator.comparing(ElspotpriceRecord::hour)).toList()) {
+                    BigDecimal spotPrice = isDKK ? record.spotPriceDKK() : record.spotPriceEUR();
+                    if (spotPrice == null) {
+                        continue;
+                    }
+                    spotPriceTimeSeries.add(record.hour(),
+                            getEnergyPrice(spotPrice.divide(BigDecimal.valueOf(1000)), currency));
+                }
             }
-            for (ElspotpriceRecord record : Arrays.stream(spotPriceRecords)
-                    .sorted(Comparator.comparing(ElspotpriceRecord::hour)).toList()) {
-                spotPriceTimeSeries.add(record.hour(), getEnergyPrice(
-                        (isDKK ? record.spotPriceDKK() : record.spotPriceEUR()).divide(BigDecimal.valueOf(1000)),
-                        currency));
+            if (!endDate.isBefore(dayAheadFirstDate)) {
+                DayAheadPriceRecord[] spotPriceRecords = apiController.getDayAheadPrices(config.priceArea, currency,
+                        DateQueryParameter.of(startDate.isBefore(dayAheadFirstDate) ? dayAheadFirstDate : startDate),
+                        DateQueryParameter.of(endDate.plusDays(1)), properties);
+                for (DayAheadPriceRecord record : Arrays.stream(spotPriceRecords)
+                        .sorted(Comparator.comparing(DayAheadPriceRecord::time)).toList()) {
+                    BigDecimal spotPrice = isDKK ? record.dayAheadPriceDKK() : record.dayAheadPriceEUR();
+                    if (spotPrice == null) {
+                        continue;
+                    }
+                    spotPriceTimeSeries.add(record.time(),
+                            getEnergyPrice(spotPrice.divide(BigDecimal.valueOf(1000)), currency));
+                }
             }
-            sendTimeSeries(CHANNEL_SPOT_PRICE, spotPriceTimeSeries);
-            return spotPriceRecords.length;
+            if (spotPriceTimeSeries.size() > 0) {
+                sendTimeSeries(CHANNEL_SPOT_PRICE, spotPriceTimeSeries);
+            }
+            return spotPriceTimeSeries.size();
         } finally {
             updateProperties(properties);
         }

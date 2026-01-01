@@ -10,6 +10,7 @@
 		<description>
 			A Multi-zone Whole House Amplifier System
 		</description>
+		<semantic-equipment-tag>AudioVisual</semantic-equipment-tag>
 
 		<channel-groups>
 			<channel-group id="all" typeId="monoprice70-all">
@@ -70,8 +71,8 @@
 			</parameter>
 			<parameter name="ignoreZones" type="text" required="false">
 				<label>Ignore Zones</label>
-				<description>(Optional) A Comma Seperated List of Zone Numbers That Will Ignore the 'All Zone' (Except All Off)
-					Commands (ie: 1,5,6)</description>
+				<description>(Optional) A Comma Separated List of Zone Numbers That Will Ignore the 'All Zone' (Except All Off)
+					Commands (e.g., 1,5,6)</description>
 			</parameter>
 			<parameter name="initialAllVolume" type="integer" min="1" max="30" required="false">
 				<label>Initial All Volume</label>
@@ -81,12 +82,12 @@
 			</parameter>
 			<parameter name="inputLabel1" type="text" required="false">
 				<label>Source 0 Input Label</label>
-				<description>Friendly Name for the Input Source to Be Displayed in the UI (ie: Chromecast, Radio, CD, etc.)</description>
+				<description>Friendly Name for the Input Source to Be Displayed in the UI (e.g., Chromecast, Radio, CD, etc.)</description>
 				<default>Source 0 - Bus</default>
 			</parameter>
 			<parameter name="inputLabel2" type="text" required="false">
 				<label>Source 1 Input Label</label>
-				<description>Friendly Name for the Input Source to Be Displayed in the UI (ie: Chromecast, Radio, CD, etc.)</description>
+				<description>Friendly Name for the Input Source to Be Displayed in the UI (e.g., Chromecast, Radio, CD, etc.)</description>
 				<default>Source 1 - Line</default>
 			</parameter>
 		</config-description>
@@ -121,6 +122,10 @@
 		<item-type>Switch</item-type>
 		<label>All On</label>
 		<description>Turn All Zones On or Off</description>
+		<tags>
+			<tag>Switch</tag>
+			<tag>Power</tag>
+		</tags>
 	</channel-type>
 
 	<channel-type id="monoprice70-source">

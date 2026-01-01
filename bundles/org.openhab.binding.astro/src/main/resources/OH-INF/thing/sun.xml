@@ -7,6 +7,7 @@
 	<thing-type id="sun">
 		<label>Astro Sun Data</label>
 		<description>Provides astronomical data from the sun</description>
+		<semantic-equipment-tag>Application</semantic-equipment-tag>
 
 		<channel-groups>
 			<channel-group id="rise" typeId="sunRange">
@@ -69,7 +70,12 @@
 			<channel-group id="season" typeId="season"/>
 			<channel-group id="eclipse" typeId="sunEclipse"/>
 			<channel-group id="phase" typeId="sunPhase"/>
+			<channel-group id="circadian" typeId="circadian"/>
 		</channel-groups>
+
+		<properties>
+			<property name="thingTypeVersion">1</property>
+		</properties>
 
 		<representation-property>geolocation</representation-property>
 

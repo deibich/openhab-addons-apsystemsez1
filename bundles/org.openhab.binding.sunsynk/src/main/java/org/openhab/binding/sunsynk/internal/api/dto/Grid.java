@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2010-2024 Contributors to the openHAB project
+/*
+ * Copyright (c) 2010-2025 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -10,7 +10,6 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-
 package org.openhab.binding.sunsynk.internal.api.dto;
 
 import java.util.ArrayList;
@@ -20,7 +19,7 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
 
 /**
  * The {@link Grid} is the internal class for inverter real time grid information
- * from the a Sun Synk Connect Account.
+ * from a Sun Synk Connect Account.
  * 
  * 
  * @author Lee Charlton - Initial contribution
@@ -77,6 +76,14 @@ public class Grid {
         this.current = sumCurrent;
     }
 
+    public int getCode() {
+        return this.code;
+    }
+
+    public String getMsg() {
+        return this.msg;
+    }
+
     public double getGridPower() {
         return this.power;
     }
@@ -89,7 +96,11 @@ public class Grid {
         return this.current;
     }
 
+    public double getGridFrequecy() {
+        return this.data.fac;
+    }
+
     public String toString() {
-        return "Content [code=" + code + ", msg=" + msg + "sucess=" + success + ", data=" + data.content() + "]";
+        return "Content [code=" + code + ", msg=" + msg + "success=" + success + ", data=" + data.content() + "]";
     }
 }

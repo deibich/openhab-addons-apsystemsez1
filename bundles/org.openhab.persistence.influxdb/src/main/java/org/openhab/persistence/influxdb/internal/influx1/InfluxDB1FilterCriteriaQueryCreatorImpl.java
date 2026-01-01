@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2010-2024 Contributors to the openHAB project
+/*
+ * Copyright (c) 2010-2025 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -30,7 +30,6 @@ import org.openhab.core.types.State;
 import org.openhab.persistence.influxdb.internal.FilterCriteriaQueryCreator;
 import org.openhab.persistence.influxdb.internal.InfluxDBConfiguration;
 import org.openhab.persistence.influxdb.internal.InfluxDBMetadataService;
-import org.openhab.persistence.influxdb.internal.InfluxDBVersion;
 
 /**
  * Implementation of {@link FilterCriteriaQueryCreator} for InfluxDB 1.0
@@ -50,9 +49,10 @@ public class InfluxDB1FilterCriteriaQueryCreatorImpl implements FilterCriteriaQu
     }
 
     @Override
-    public String createQuery(FilterCriteria criteria, String retentionPolicy) {
+    public String createQuery(FilterCriteria criteria, String retentionPolicy, @Nullable String alias) {
         final String itemName = Objects.requireNonNull(criteria.getItemName()); // we checked non-null before
-        final String tableName = getTableName(itemName);
+        final String localAlias = alias != null ? alias : itemName;
+        final String tableName = getTableName(localAlias);
         final boolean hasCriteriaName = itemName != null;
 
         Select select = select().column("\"" + COLUMN_VALUE_NAME_V1 + "\"::field")
@@ -61,8 +61,8 @@ public class InfluxDB1FilterCriteriaQueryCreatorImpl implements FilterCriteriaQu
 
         Where where = select.where();
 
-        if (itemName != null && !tableName.equals(itemName)) {
-            where.and(BuiltQuery.QueryBuilder.eq(TAG_ITEM_NAME, itemName));
+        if (localAlias != null && !tableName.equals(localAlias)) {
+            where.and(BuiltQuery.QueryBuilder.eq(TAG_ITEM_NAME, localAlias));
         }
         if (criteria.getBeginDate() != null) {
             where.and(BuiltQuery.QueryBuilder.gte(COLUMN_TIME_NAME_V1, criteria.getBeginDate().toInstant().toString()));
@@ -72,9 +72,9 @@ public class InfluxDB1FilterCriteriaQueryCreatorImpl implements FilterCriteriaQu
         }
 
         State filterState = criteria.getState();
-        if (filterState != null && criteria.getOperator() != null) {
-            where.and(new SimpleClause(COLUMN_VALUE_NAME_V1,
-                    getOperationSymbol(criteria.getOperator(), InfluxDBVersion.V1), stateToObject(filterState)));
+        if (filterState != null) {
+            where.and(new SimpleClause(COLUMN_VALUE_NAME_V1, getOperationSymbol(criteria.getOperator()),
+                    stateToObject(filterState)));
         }
 
         if (criteria.getOrdering() == FilterCriteria.Ordering.DESCENDING) {
@@ -99,7 +99,7 @@ public class InfluxDB1FilterCriteriaQueryCreatorImpl implements FilterCriteriaQu
             return "/.*/";
         }
 
-        String name = influxDBMetadataService.getMeasurementNameOrDefault(itemName, itemName);
+        String name = influxDBMetadataService.getMeasurementNameOrDefault(itemName);
 
         if (configuration.isReplaceUnderscore()) {
             name = name.replace('_', '.');
@@ -118,5 +118,12 @@ public class InfluxDB1FilterCriteriaQueryCreatorImpl implements FilterCriteriaQu
             sb.append(tableName);
         }
         return sb.toString();
+    }
+
+    private String getOperationSymbol(FilterCriteria.Operator operator) {
+        if (operator == FilterCriteria.Operator.NEQ) {
+            return "<>";
+        }
+        return operator.getSymbol();
     }
 }
